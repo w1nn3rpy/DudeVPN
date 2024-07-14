@@ -2,3 +2,5 @@ asyncpg
 aiogram
 APScheduler
 python-decouple
+outline-vpn-api
+yoomoney

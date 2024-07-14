@@ -3,15 +3,17 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, KeyboardButton, ReplyKeyboardRemove
 from keyboards.all_kb import main_kb, buy_button, home
 from keyboards.inline_kbs import (support_kb, profile_kb, select_time_kb,
-                                  server_select, accept_or_not, money_vars, want_to_test)
+                                  server_select, accept_or_not, want_to_test, add_del_promo)
 from create_bot import bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from promocodes import promokods, removing
+
+from db_handler.db_class import *
+
+from payment.main import *
 
 
 start_router = Router()
-promo_router = Router()
 
 
 class Form(StatesGroup):
@@ -34,8 +36,16 @@ async def del_call_kb(call: CallbackQuery):
 
 @start_router.message(CommandStart())
 async def cmd_start(message: Message):
+    result = await get_user_info(message.from_user.id, 2)  # проверка права is_admin [True/False]
     await message.answer('Привет, я - DudeVPN бот. Здесь ты можешь купить качественный VPN по низким ценам\n'
-                         'Что интересует?', reply_markup=main_kb(message.from_user.id))
+                         'Что интересует?', reply_markup=main_kb(result))
+    if not await get_user_info(message.from_user.id):
+        await new_user(message.from_user.id, message.from_user.username)
+
+
+@start_router.message(F.text == '🔥 Админка')
+async def add_del_promos(message: Message):
+    await message.answer('Выбирай', reply_markup=add_del_promo())
 
 
 @start_router.message(F.text.in_({'✌️ О нашем VPN', '/about'}))
@@ -58,16 +68,14 @@ async def sup(message: Message):
 async def profile(message: Message):
     await message.answer('👤 Профиль\n'
                          f'├ <b>ИД</b>: {message.from_user.id}\n'
-                         f'├ <b>Никнейм</b>: @{message.from_user.username}\n'
-                         '├ <b>Баланс</b>: 0\n'
-                         '├ <b>Количество всех заказов</b>: {None} шт.\n'
-                         '└ <b>Сумма всех покупок</b>: {None}\n',
+                         f'└ <b>Никнейм</b>: @{message.from_user.username}',
                          reply_markup=profile_kb())
 
 
 @start_router.message(F.text == 'Домой 🏠')
 async def go_home(message: Message):
-    await message.answer('Возврат в меню.', reply_markup=main_kb(message.from_user.id))
+    await message.answer('Возврат в меню.', reply_markup=main_kb(
+        await get_user_info(message.from_user.id, 2)))
 
 
 @start_router.callback_query(F.data == 'to_catalog')
@@ -76,16 +84,12 @@ async def server(call: CallbackQuery):
     await call.message.answer('Выберите сервер', reply_markup=server_select())
 
 
-@start_router.callback_query(F.data == 'add_money')
-async def add_money(call: CallbackQuery):
-    await del_call_kb(call)
-    await call.message.answer('Выберите сумму для пополнения:', reply_markup=money_vars())
-
-
 @start_router.callback_query(F.data == 'get_home')
 async def to_homepage(call: CallbackQuery):
     await del_call_kb(call)
-    await call.message.answer('Домой 🏠', reply_markup=main_kb(call.message.from_user.id))
+    await call.message.answer('Домой 🏠', reply_markup=main_kb(
+        await get_user_info(call.from_user.id, 2)
+    ))
 
 
 @start_router.message(F.text.in_({'🛒 Купить VPN', '/buy'}))
@@ -108,19 +112,35 @@ async def price(call: CallbackQuery):
     await call.message.answer(
         f'Стоимость подписки: {price_dict[call.data]}р.\n'
         'Подтвердить покупку?',
-        reply_markup=accept_or_not()
+        reply_markup=accept_or_not(price_dict[call.data])
     )
 
 
-@start_router.callback_query(F.data.in_({'accept', 'cancel'}))
+@start_router.callback_query(F.data.in_({'accept 150', 'accept 400', 'accept 650', 'cancel'}))
 async def result_of_buy(call: CallbackQuery):
+    result = call.data.split()
     await del_call_kb(call)
-    if call.data == 'accept':
-        await call.message.answer('Подписка оплачена! ✅\nОжидайте ключ',
-                                  reply_markup=main_kb(call.message.from_user.id))
+    if result[0] == 'accept':
+        link, label = payment(int(result[1]), str(call.from_user.id)+str(data_for_individual_label))
+        await add_label(call.from_user.id, label)
+        await call.message.answer(f'Ваша ссылка на оплату подписки:\n{link}')
+        await call.message.answer('После оплаты напишите в чат "Оплатил" либо "Оплатила"', callback_dataa=result[1])
+
     else:
         await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
-                                  reply_markup=main_kb(call.from_user.id))
+                                  reply_markup=main_kb(await get_user_info(call.message.from_user.id, 2)))
+
+
+@start_router.message(F.text.lower().in_({'оплатил', 'оплатила'}))
+async def check_payment_handler(message: Message):
+    payment_label = await get_user_info(message.from_user.id, 7)
+    result = check_payment(payment_label)
+    if result is not False:
+        amount = {150: 1, 450: 3, 650: 6}
+        await set_for_subscribe(message.from_user.id, amount[result])
+        await message.answer('Оплата прошла успешно')
+    else:
+        await message.answer('Оплата не поступала. Попробуйте позже, либо свяжитесь с поддержкой.')
 
 
 @start_router.message(F.text == '🔥Хочу тестовый период!🔥')
@@ -140,12 +160,14 @@ async def check_promo(message: Message, state: FSMContext):
     await state.update_data(promokod=message.text)
     await message.answer('Промокод проверяется... ⏳')
     data = await state.get_data()
-    promo = int(data['promokod'])
-    if promo in promokods:
-        await message.answer(f'Промокод {promokods.pop(promokods.index(promo))} активирован! 🔥\n'
+    promo = (data['promokod'])
+    if get_promo(promo) is True:
+        await message.answer(f'Промокод {promo} активирован! 🔥\n'
                              'Вам предоставлен тестовый доступ на 7 дней.\n'
                              'Ожидайте ключ и инструкцию', reply_markup=home())
         await state.clear()
     else:
         await message.answer('Такого промокода не существует')
-        await message.answer('Возврат в меню.', reply_markup=main_kb(message.from_user.id))
+        await message.answer('Возврат в меню.', reply_markup=main_kb(
+            await get_user_info(message.from_user.id, 2)))
+

@@ -6,9 +6,6 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from decouple import config
 
-# from db_handler.db_class import PostgresHandler
-
-# pg_db = PostgresHandler(config('PG_LINK'))
 scheduler = AsyncIOScheduler(timezone='Europe/Samara')
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

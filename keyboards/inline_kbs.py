@@ -12,21 +12,10 @@ def support_kb():
 
 def profile_kb():
     inline_kb_profile = [
-        [InlineKeyboardButton(text='💵 Пополнить баланс', callback_data='add_money')],
         [InlineKeyboardButton(text='🔍 В каталог', callback_data='to_catalog')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_profile)
-
-
-def money_vars():
-    inline_kb_money = [
-        [InlineKeyboardButton(text='150 рублей', callback_data='150')],
-        [InlineKeyboardButton(text='400 рублей', callback_data='400')],
-        [InlineKeyboardButton(text='600 рублей', callback_data='600')],
-        [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=inline_kb_money)
 
 
 def server_select():
@@ -47,9 +36,9 @@ def select_time_kb():
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_buy)
 
 
-def accept_or_not():
+def accept_or_not(sum_of):
     inline_kb_accept = [
-        [InlineKeyboardButton(text='✅ Подтвердить', callback_data='accept'),
+        [InlineKeyboardButton(text='✅ Подтвердить', callback_data='accept' + ' ' + str(sum_of)),
          InlineKeyboardButton(text='❌ Отмена', callback_data='cancel')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_accept)
@@ -62,3 +51,11 @@ def want_to_test():
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_test)
+
+
+def add_del_promo():
+    inline_kb = [
+        [InlineKeyboardButton(text='Добавить промокод', callback_data='add_promo')],
+        [InlineKeyboardButton(text='Удалить промокод', callback_data='del_promo')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)

@@ -1,4 +1,5 @@
-from config import client
+from outlline.config import client
+from outline_vpn.outline_vpn import OutlineKey
 
 
 def get_keys() -> list:
@@ -25,10 +26,10 @@ def get_key_from_id(key_id: str) -> str:
             return key.access_url
 
 
-def create_new_key(key_id: str = None, name: str = None, data_limit_bytes: float = None) -> str:
+def create_new_key(key_id: str = None, name: str = None, data_limit_bytes: float = None) -> OutlineKey:
     """
     Создание нового ключа
-    Возвращает созданный ключ
+    Возвращает ВСЕ ДАННЫЕ созданного ключа
     """
     return client.create_key(key_id=key_id, name=name, data_limit=data_limit_bytes)
 

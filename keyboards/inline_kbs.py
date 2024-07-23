@@ -53,7 +53,14 @@ def want_to_test():
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_test)
 
 
-def add_del_promo():
+def admin_actions():
+    inline_kb = [
+        [InlineKeyboardButton(text='Добавить/Удалить промокод', callback_data='add_del_promo_next_step')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def add_del_promo_kb():
     inline_kb = [
         [InlineKeyboardButton(text='Добавить промокод', callback_data='add_promo')],
         [InlineKeyboardButton(text='Удалить промокод', callback_data='del_promo')]

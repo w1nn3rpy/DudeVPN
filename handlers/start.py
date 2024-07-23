@@ -1,9 +1,8 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery, KeyboardButton, ReplyKeyboardRemove
+from aiogram.filters import CommandStart
+from aiogram.types import Message, CallbackQuery
 from keyboards.all_kb import main_kb, buy_button, home
-from keyboards.inline_kbs import (support_kb, profile_kb, select_time_kb,
-                                  server_select, accept_or_not, want_to_test, add_del_promo)
+from keyboards.inline_kbs import *
 from create_bot import bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -12,12 +11,15 @@ from db_handler.db_class import *
 
 from payment.main import *
 
+from outlline.main import *
+
 
 start_router = Router()
 
 
 class Form(StatesGroup):
     promokod = State()
+    admin_promokod = State()
 
 
 async def del_call_kb(call: CallbackQuery):
@@ -45,7 +47,38 @@ async def cmd_start(message: Message):
 
 @start_router.message(F.text == '🔥 Админка')
 async def add_del_promos(message: Message):
-    await message.answer('Выбирай', reply_markup=add_del_promo())
+    await message.answer('Выбирай', reply_markup=admin_actions())
+
+
+@start_router.callback_query(F.data == 'add_del_promo_next_step')
+async def add_del_promo(call: CallbackQuery, state: FSMContext):
+    await del_call_kb(call)
+    await call.message.answer('⬇️ Введите промокод ⬇️', reply_markup=home())
+    await state.set_state(Form.admin_promokod)
+
+
+@start_router.message(F.text, Form.admin_promokod)
+async def action_with_promo(message: Message, state: FSMContext):
+    await state.update_data(admin_promokod=message.text.split())
+    await message.answer('Что делать с этим промокодом?', reply_markup=add_del_promo_kb())
+
+
+@start_router.callback_query(F.data, Form.admin_promokod)
+async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
+    fsm_data = await state.get_data()
+    promo, time = fsm_data['admin_promokod']
+    if call.data == 'add_promo':
+        await add_promo(promo, int(time))
+        await call.message.answer(f'Промокод {promo} на {time} недель добавлен')
+        await state.clear()
+        await call.message.answer('Возврат в меню.', reply_markup=main_kb(
+            await get_user_info(call.message.from_user.id, 2)))
+    elif call.data == 'del_promo':
+        await del_promo(promo)
+        await call.message.answer(f'Промокод {promo} удален')
+        await state.clear()
+        await call.message.answer('Возврат в меню.', reply_markup=main_kb(
+            await get_user_info(call.message.from_user.id, 2)))
 
 
 @start_router.message(F.text.in_({'✌️ О нашем VPN', '/about'}))
@@ -124,7 +157,9 @@ async def result_of_buy(call: CallbackQuery):
         link, label = payment(int(result[1]), str(call.from_user.id)+str(data_for_individual_label))
         await add_label(call.from_user.id, label)
         await call.message.answer(f'Ваша ссылка на оплату подписки:\n{link}')
-        await call.message.answer('После оплаты напишите в чат "Оплатил" либо "Оплатила"', callback_dataa=result[1])
+        await call.message.answer('После оплаты напишите в чат "Оплатил" либо "Оплатила"\n'
+                                  'А также можно оплатить переводом. Для этого напиши админу.',
+                                  callback_dataa=result[1])
 
     else:
         await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
@@ -136,7 +171,7 @@ async def check_payment_handler(message: Message):
     payment_label = await get_user_info(message.from_user.id, 7)
     result = check_payment(payment_label)
     if result is not False:
-        amount = {150: 1, 450: 3, 650: 6}
+        amount = {150: 4, 450: 12, 650: 24}  # Кол-во недель исходя из суммы оплаты
         await set_for_subscribe(message.from_user.id, amount[result])
         await message.answer('Оплата прошла успешно')
     else:
@@ -161,13 +196,23 @@ async def check_promo(message: Message, state: FSMContext):
     await message.answer('Промокод проверяется... ⏳')
     data = await state.get_data()
     promo = (data['promokod'])
-    if get_promo(promo) is True:
+    promo_info = await pop_promo(promo)
+    if promo_info is not False:
+        promo_time = promo_info[1]
+
         await message.answer(f'Промокод {promo} активирован! 🔥\n'
-                             'Вам предоставлен тестовый доступ на 7 дней.\n'
+                             f'Вам предоставлен тестовый доступ на {promo_time} недель.\n'
                              'Ожидайте ключ и инструкцию', reply_markup=home())
         await state.clear()
+        key = create_new_key(name='test').access_url
+
+        await set_user_vpn_key(message.from_user.id, key)
+        await set_for_subscribe(message.from_user.id, promo_time)
+        await message.answer(f'Ваш ключ:\n{key}')
+        # TODO: Сделать инструкцию для пользователя
+
     else:
         await message.answer('Такого промокода не существует')
+        await state.clear()
         await message.answer('Возврат в меню.', reply_markup=main_kb(
             await get_user_info(message.from_user.id, 2)))
-

@@ -1,5 +1,5 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-from create_bot import admins, bot
+from create_bot import bot
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
 

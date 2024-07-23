@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta
+from work_time.time_func import *
 
 import asyncpg
 from decouple import config
@@ -22,9 +22,6 @@ async def create_table():
 
 
 async def drop_table(name: str):
-    """
-    Удаление таблицы
-    """
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
         DROP TABLE {name}
@@ -32,20 +29,28 @@ async def drop_table(name: str):
     await con.close()
 
 
-async def add_promo(code: str):
+async def add_promo(code: str, time: int):
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
-        INSERT INTO promocodes(promo) VALUES ('{code}')
-        ''')
+        INSERT INTO promocodes(promo, time) VALUES ($1, $2)
+        ''', code, time)
     await con.close()
 
 
-async def new_user(user_id: int, username: str = 'None', is_admin: bool = 'False', is_subscriber: bool = 'False'):
+async def del_promo(code: str):
+    con = await asyncpg.connect(dsn=config('DATABASE_URL'))
+    await con.execute(f'''
+        DELETE FROM promocodes WHERE promo = $1
+        ''', code)
+    await con.close()
+
+
+async def new_user(user_id, username: str = 'None', is_admin: bool = 'False', is_subscriber: bool = 'False'):
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
         INSERT INTO users(user_id, name, is_admin, is_subscriber) 
-        VALUES ({user_id}, '{username}',{is_admin}, {is_subscriber})
-        ''')
+        VALUES ($1, $2, $3, $4)
+        ''', user_id, username, is_admin, is_subscriber)
     await con.close()
 
 
@@ -65,15 +70,15 @@ async def change_column(name_of_table: str, column_name: str, type_of_data: str)
     await con.close()
 
 
-async def add_admin(user_id: int):
+async def add_admin(user_id):
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
-    UPDATE users SET is_admin=True WHERE user_id = '{user_id}'
-            ''')
+    UPDATE users SET is_admin=True WHERE user_id = $1
+            ''', user_id)
     await con.close()
 
 
-async def get_user_info(user_id: int, param: int = None):
+async def get_user_info(user_id, param: int = None):
     """
         1 - name str,
         2 - is_admin bool,
@@ -85,8 +90,8 @@ async def get_user_info(user_id: int, param: int = None):
     """
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     result = await con.fetchrow(f'''
-        SELECT * FROM users WHERE user_id = '{user_id}'
-                ''')
+        SELECT * FROM users WHERE user_id = $1
+                ''', user_id)
     await con.close()
     if result:
         if param:
@@ -95,17 +100,23 @@ async def get_user_info(user_id: int, param: int = None):
     return False
 
 
-async def get_promo(code: str) -> bool:
+async def pop_promo(code: str):
+    sql_keywords = ['select', 'delete', 'insert', 'create', 'update', 'drop']
+    for words in sql_keywords:
+        if words in code.lower():
+            return False
+
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     result = await con.fetchrow(f'''
-        SELECT promo FROM promocodes WHERE promo = '{code}'
-                ''')
+        SELECT promo, time FROM promocodes WHERE promo = $1
+                ''', code)
+
     if result:
         await con.execute(f'''
-        delete FROM promocodes WHERE promo = '{code}'       
-                ''')
+        DELETE FROM promocodes WHERE promo = $1       
+                ''', code)
         await con.close()
-        return True
+        return result
     await con.close()
     return False
 
@@ -113,19 +124,19 @@ async def get_promo(code: str) -> bool:
 async def add_label(user_id, label: str):
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
-        UPDATE users SET payment_label='{label}' WHERE user_id = '{user_id}'
+        UPDATE users SET payment_label = '{label}' WHERE user_id = '{user_id}'
                 ''')
     await con.close()
 
 
 async def set_for_subscribe(user_id, buy_on):
-    _today = datetime.date(datetime.now())
-    _end_time = _today + timedelta(weeks=buy_on * 4)
+    start_time, end_time = get_time_for_subscribe(buy_on)
+
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
             UPDATE users SET is_subscriber = True,
-            start_subscribe = '{_today}',
-            end_subscribe = '{_end_time} ', 
+            start_subscribe = '{start_time}',
+            end_subscribe = '{end_time} ', 
             payment_label = null 
             WHERE user_id = '{user_id}'
                    ''')
@@ -138,14 +149,20 @@ async def set_for_unsubscribe(user_id):
                 UPDATE users SET is_subscriber = False,
                 start_subscribe = null,
                 end_subscribe = null
-                WHERE user_id = {user_id}
-                       ''')
+                WHERE user_id = '{user_id}'
+                    ''')
     await con.close()
 
 
-# asyncio.run(new_user(5983514379, 'w1nn3r1337'))
-
-asyncio.run(set_for_subscribe(5983514379, 1))
-_today = datetime.date(datetime.now())
-_end_time = _today + timedelta(weeks=1 * 4)
-
+async def set_user_vpn_key(user_id, key: str):
+    con = None
+    try:
+        con = await asyncpg.connect(dsn=config('DATABASE_URL'))
+        await con.execute(f'''
+        UPDATE users SET vpn_key = $1 WHERE user_id = $2 
+                        ''', key, user_id)
+    except Exception as e:
+        print(str(e))
+    finally:
+        if con:
+            await con.close()

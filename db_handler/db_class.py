@@ -45,7 +45,7 @@ async def del_promo(code: str):
     await con.close()
 
 
-async def new_user(user_id, username: str = 'None', is_admin: bool = 'False', is_subscriber: bool = 'False'):
+async def new_user(user_id, username: str = 'None', is_admin=False, is_subscriber: bool = False):
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
         INSERT INTO users(user_id, name, is_admin, is_subscriber) 

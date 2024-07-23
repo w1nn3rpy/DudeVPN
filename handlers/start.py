@@ -42,6 +42,7 @@ async def cmd_start(message: Message):
     await message.answer('Привет, я - DudeVPN бот. Здесь ты можешь купить качественный VPN по низким ценам\n'
                          'Что интересует?', reply_markup=main_kb(result))
     if not await get_user_info(message.from_user.id):
+
         await new_user(message.from_user.id, message.from_user.username)
 
 
@@ -204,7 +205,7 @@ async def check_promo(message: Message, state: FSMContext):
                              f'Вам предоставлен тестовый доступ на {promo_time} недель.\n'
                              'Ожидайте ключ и инструкцию', reply_markup=home())
         await state.clear()
-        key = create_new_key(name='test').access_url
+        key = create_new_key().access_url
 
         await set_user_vpn_key(message.from_user.id, key)
         await set_for_subscribe(message.from_user.id, promo_time)

@@ -157,10 +157,10 @@ async def result_of_buy(call: CallbackQuery):
     if result[0] == 'accept':
         link, label = payment(int(result[1]), str(call.from_user.id)+str(data_for_individual_label))
         await add_label(call.from_user.id, label)
-        await call.message.answer(f'Ваша ссылка на оплату подписки:\n{link}')
+        await call.message.answer(f'Ваша ссылка на оплату подписки:', reply_markup=pay(link))
         await call.message.answer('После оплаты напишите в чат "Оплатил" либо "Оплатила"\n'
                                   'А также можно оплатить переводом. Для этого напиши админу.',
-                                  callback_dataa=result[1])
+                                  callback_data=result[1])
 
     else:
         await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',

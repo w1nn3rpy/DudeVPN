@@ -66,3 +66,10 @@ def add_del_promo_kb():
         [InlineKeyboardButton(text='Удалить промокод', callback_data='del_promo')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def pay(link):
+    inline_kb = [
+        [InlineKeyboardButton(text='Оплатить', url=link)]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)

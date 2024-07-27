@@ -84,7 +84,7 @@ async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
 
 @start_router.message(F.text.in_({'✌️ О нашем VPN', '/about'}))
 async def about(message: Message):
-    await message.answer('Это бот для продажи, генерации, выдачи и управления'
+    await message.answer('Это бот для продажи, генерации, выдачи и управления\n'
                          'ключами для Outline VPN.\n'
                          'Наш сервер находится в Нидерландах, имеет низкий пинг и высокую скорость!\n'
                          'А самое главное - наш VPN дешевый и доступен каждому!',

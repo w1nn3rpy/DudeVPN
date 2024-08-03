@@ -36,6 +36,14 @@ async def del_call_kb(call: CallbackQuery):
         print(E)
 
 
+async def confirm_pay(message):
+    key = create_new_key().access_url
+    await set_user_vpn_key(message.from_user.id, key)
+    await message.answer(f'Ваш ключ:\n \n{key}\n \n\nВыберите свою платформу для скачивания приложения\n',
+                         reply_markup=apps())
+    await message.answer('Инструкция по настройке', reply_markup=guide())
+
+
 @start_router.message(CommandStart())
 async def cmd_start(message: Message):
     result = await get_user_info(message.from_user.id, 2)  # проверка права is_admin [True/False]
@@ -159,7 +167,7 @@ async def result_of_buy(call: CallbackQuery):
         await add_label(call.from_user.id, label)
         await call.message.answer(f'Ваша ссылка на оплату подписки:', reply_markup=pay(link))
         await call.message.answer('После оплаты напишите в чат "Оплатил" либо "Оплатила"\n'
-                                  'А также можно оплатить переводом. Для этого напиши админу.',
+                                  'А также можно оплатить переводом. Для этого напишите админу.',
                                   callback_data=result[1])
 
     else:
@@ -175,6 +183,7 @@ async def check_payment_handler(message: Message):
         amount = {150: 4, 450: 12, 650: 24}  # Кол-во недель исходя из суммы оплаты
         await set_for_subscribe(message.from_user.id, amount[result])
         await message.answer('Оплата прошла успешно')
+        await confirm_pay(message=message)
     else:
         await message.answer('Оплата не поступала. Попробуйте позже, либо свяжитесь с поддержкой.')
 
@@ -205,13 +214,7 @@ async def check_promo(message: Message, state: FSMContext):
                              f'Вам предоставлен тестовый доступ на {promo_time} недель.\n'
                              'Ожидайте ключ и инструкцию', reply_markup=home())
         await state.clear()
-        key = create_new_key().access_url
-
-        await set_user_vpn_key(message.from_user.id, key)
-        await set_for_subscribe(message.from_user.id, promo_time)
-        await message.answer(f'Ваш ключ:\n{key}')
-        # TODO: Сделать инструкцию для пользователя
-
+        await confirm_pay(message=message)
     else:
         await message.answer('Такого промокода не существует')
         await state.clear()

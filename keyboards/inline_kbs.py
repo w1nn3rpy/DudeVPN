@@ -73,3 +73,23 @@ def pay(link):
         [InlineKeyboardButton(text='Оплатить', url=link)]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def apps():
+    inline_kb = [
+        [InlineKeyboardButton(text='Клиент для iOS', url='https://apps.apple.com/us/app/outline-app/id1356177741')],
+        [InlineKeyboardButton(text='Клиент для Android',
+                              url='https://play.google.com'
+                                  '/store/apps/details?id=org.outline.android.client&pcampaignid=web_share')],
+        [InlineKeyboardButton(text='Клиент для MacOS',
+                              url='https://apps.apple.com/us/app/outline-secure-internet-access/id1356178125?mt=12')],
+        [InlineKeyboardButton(text='Клиент для Windows', url='https://outline-vpn.com/download.php?os=c_windows')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def guide():
+    inline_kb = [
+        [InlineKeyboardButton(text='Прочитать', url='https://telegra.ph/Nastrojka-VPN-08-03')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)

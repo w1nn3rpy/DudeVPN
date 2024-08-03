@@ -8,4 +8,4 @@ attach:
 	docker attach dudevpn_bot
 dell:
 	docker rm dudevpn_bot
-	docker image remove w1nn3rpy/dudevpn_bot_image
+	docker image remove dudevpn_bot_image

@@ -7,7 +7,7 @@ def main_kb(res: bool):
     kb_list = [
         [KeyboardButton(text="✌️ О нашем VPN"), KeyboardButton(text='🆘 Техподдержка')],
         [KeyboardButton(text="🛒 Купить VPN"), KeyboardButton(text='👤 Профиль')],
-        [KeyboardButton(text="🔥Хочу тестовый период!🔥")]
+        [KeyboardButton(text="🔥Промо🔥")]
     ]
     if res is True:
         kb_list.append([KeyboardButton(text='🔥 Админка')])

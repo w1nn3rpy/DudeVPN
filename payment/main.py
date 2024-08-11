@@ -25,7 +25,7 @@ def payment(is_sum: int, is_label: str) -> str | tuple:
         targets='Subscribe',
         paymentType='SB',
         sum=is_sum,
-        label=is_label+data_for_individual_label
+        label=is_label
     )
     return quickpay.redirected_url, quickpay.label
 
@@ -47,7 +47,7 @@ history = client.operation_history()
 
 def check_payment(is_label: str):
     for operation in history.operations:
-        if operation.label == is_label and operation.status.lower() == 'succes':
+        if operation.label == is_label and operation.status.lower() == 'success':
             return int(operation.amount)
     return False
 

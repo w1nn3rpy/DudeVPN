@@ -84,9 +84,9 @@ async def get_user_info(user_id, param: int = None):
         2 - is_admin bool,
         3 - is_subscriber bool,
         4 - vpn_key str,
-        5 - start_subscribe date,
-        6 - end_subscribe date,
-        7 - payment_label TEXT
+        5 - payment_label TEXT,
+        6 - start_subscribe date,
+        7 - end_subscribe date
     """
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     result = await con.fetchrow(f'''

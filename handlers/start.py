@@ -62,7 +62,7 @@ async def add_del_promos(message: Message):
 @start_router.callback_query(F.data == 'add_del_promo_next_step')
 async def add_del_promo(call: CallbackQuery, state: FSMContext):
     await del_call_kb(call)
-    await call.message.answer('⬇️ Введите промокод ⬇️', reply_markup=home())
+    await call.message.answer('⬇️ Введите промокод и кол-во недель ⬇️', reply_markup=home())
     await state.set_state(Form.admin_promokod)
 
 
@@ -177,10 +177,10 @@ async def result_of_buy(call: CallbackQuery):
 
 @start_router.message(F.text.lower().in_({'оплатил', 'оплатила'}))
 async def check_payment_handler(message: Message):
-    payment_label = await get_user_info(message.from_user.id, 7)
+    payment_label = await get_user_info(message.from_user.id, 5)
     result = check_payment(payment_label)
     if result is not False:
-        amount = {150: 4, 450: 12, 650: 24}  # Кол-во недель исходя из суммы оплаты
+        amount = {145: 4, 436: 12, 630: 24}  # Кол-во недель исходя из суммы оплаты
         await set_for_subscribe(message.from_user.id, amount[result])
         await message.answer('Оплата прошла успешно')
         await confirm_pay(message=message)
@@ -188,7 +188,7 @@ async def check_payment_handler(message: Message):
         await message.answer('Оплата не поступала. Попробуйте позже, либо свяжитесь с поддержкой.')
 
 
-@start_router.message(F.text == '🔥Хочу тестовый период!🔥')
+@start_router.message(F.text == '🔥Промо🔥')
 async def want_test(message: Message):
     await message.answer('Выберите действие', reply_markup=want_to_test())
 
@@ -209,7 +209,7 @@ async def check_promo(message: Message, state: FSMContext):
     promo_info = await pop_promo(promo)
     if promo_info is not False:
         promo_time = promo_info[1]
-
+        await set_for_subscribe(message.from_user.id, promo_time)
         await message.answer(f'Промокод {promo} активирован! 🔥\n'
                              f'Вам предоставлен тестовый доступ на {promo_time} недель.\n'
                              'Ожидайте ключ и инструкцию', reply_markup=home())

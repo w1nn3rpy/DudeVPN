@@ -14,4 +14,4 @@ clear:
 	rm -rf aiogram_run.py create_bot.py db_handler handlers keyboards outline payment work_time
 
 clone:
-	git clone git@github.com:w1nn3rpy/DudeVPN.git .
+	git fetch

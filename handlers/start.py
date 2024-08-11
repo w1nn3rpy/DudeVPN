@@ -11,7 +11,7 @@ from db_handler.db_class import *
 
 from payment.main import *
 
-from outlline.main import *
+from outline.main import *
 
 
 start_router = Router()

@@ -13,5 +13,5 @@ dell:
 clear:
 	rm -rf aiogram_run.py create_bot.py db_handler handlers keyboards outline payment work_time
 
-clone:
+pull:
 	git pull

@@ -1,11 +1,12 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
-from keyboards.all_kb import main_kb, buy_button, home
 from keyboards.inline_kbs import *
 from create_bot import bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import BotCommand, BotCommandScopeDefault
+
 
 from db_handler.db_class import *
 
@@ -13,8 +14,16 @@ from payment.main import *
 
 from outline.main import *
 
-
 start_router = Router()
+
+
+async def set_commands():
+    commands = [BotCommand(command='start', description='Старт')]
+    await bot.set_my_commands(commands, BotCommandScopeDefault())
+
+
+class LinkMsg:
+    msg = None
 
 
 class Form(StatesGroup):
@@ -22,47 +31,75 @@ class Form(StatesGroup):
     admin_promokod = State()
 
 
-async def del_call_kb(call: CallbackQuery):
+async def del_call_kb(call: CallbackQuery, *param: bool):
     """
     Функция удаления прошлого сообщения
     """
     try:
-        await bot.edit_message_reply_markup(
+        await bot.delete_message(
             chat_id=call.from_user.id,
-            message_id=call.message.message_id,
-            reply_markup=None
+            message_id=call.message.message_id
         )
+        if param:
+            await bot.delete_message(
+                chat_id=call.from_user.id,
+                message_id=LinkMsg.msg.message_id
+            )
+            LinkMsg.msg = None
+
     except Exception as E:
         print(E)
 
 
-async def confirm_pay(message):
-    key = create_new_key().access_url
-    await set_user_vpn_key(message.from_user.id, key)
-    await message.answer(f'Ваш ключ:\n \n{key}\n \n\nВыберите свою платформу для скачивания приложения\n',
-                         reply_markup=apps())
-    await message.answer('Инструкция по настройке', reply_markup=guide())
+async def del_message_kb(message: Message, *param):
+    """
+    Функция удаления прошлого сообщения
+    2-й необязательный аргумент 'True' = удаление 5-и последних сообщений
+    """
+    try:
+        if param:
+            await bot.delete_messages(
+                chat_id=message.from_user.id,
+                message_ids=[message.message_id - 3, message.message_id - 2,
+                             message.message_id - 1, message.message_id, message.message_id + 1]
+            )
+        else:
+            await bot.delete_message(
+                chat_id=message.from_user.id,
+                message_id=message.message_id
+            )
+
+    except Exception as E:
+        print(E)
+
+
+async def confirm_pay(call):
+    key = create_new_key(call.from_user.id, call.from_user.username).access_url
+    await set_user_vpn_key(call.from_user.id, key)
+    await call.message.answer(f'Ваш ключ:\n \n{key}\n \n\nВыберите свою платформу для скачивания приложения\n',
+                              reply_markup=apps())
+    await call.message.answer('Инструкция по настройке', reply_markup=guide())
 
 
 @start_router.message(CommandStart())
 async def cmd_start(message: Message):
-    result = await get_user_info(message.from_user.id, 2)  # проверка права is_admin [True/False]
+    check_to_admin = await get_user_info(message.from_user.id, 2)  # проверка права is_admin [True/False]
     await message.answer('Привет, я - DudeVPN бот. Здесь ты можешь купить качественный VPN по низким ценам\n'
-                         'Что интересует?', reply_markup=main_kb(result))
+                         'Что интересует?', reply_markup=main_inline_kb(check_to_admin))
     if not await get_user_info(message.from_user.id):
-
         await new_user(message.from_user.id, message.from_user.username)
 
 
-@start_router.message(F.text == '🔥 Админка')
-async def add_del_promos(message: Message):
-    await message.answer('Выбирай', reply_markup=admin_actions())
+@start_router.callback_query(F.data == 'adminka')
+async def add_del_promos(call: CallbackQuery):
+    await del_call_kb(call)
+    await call.message.answer('Выбирай', reply_markup=admin_actions())
 
 
 @start_router.callback_query(F.data == 'add_del_promo_next_step')
 async def add_del_promo(call: CallbackQuery, state: FSMContext):
     await del_call_kb(call)
-    await call.message.answer('⬇️ Введите промокод и кол-во недель ⬇️', reply_markup=home())
+    await call.message.answer('⬇️ Введите промокод и кол-во недель ⬇️')
     await state.set_state(Form.admin_promokod)
 
 
@@ -70,54 +107,67 @@ async def add_del_promo(call: CallbackQuery, state: FSMContext):
 async def action_with_promo(message: Message, state: FSMContext):
     await state.update_data(admin_promokod=message.text.split())
     await message.answer('Что делать с этим промокодом?', reply_markup=add_del_promo_kb())
+    await del_message_kb(message)
 
 
 @start_router.callback_query(F.data, Form.admin_promokod)
 async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
+    check_to_admin = await get_user_info(call.from_user.id, 2)
+    await del_call_kb(call)
     fsm_data = await state.get_data()
     promo, time = fsm_data['admin_promokod']
     if call.data == 'add_promo':
         await add_promo(promo, int(time))
-        await call.message.answer(f'Промокод {promo} на {time} недель добавлен')
+        await call.message.answer(f'Промокод "{promo}" на {time} недель добавлен')
         await state.clear()
-        await call.message.answer('Возврат в меню.', reply_markup=main_kb(
-            await get_user_info(call.message.from_user.id, 2)))
+        await call.message.answer('Возврат в меню.', reply_markup=main_inline_kb(check_to_admin))
     elif call.data == 'del_promo':
         await del_promo(promo)
-        await call.message.answer(f'Промокод {promo} удален')
+        await call.message.answer(f'Промокод "{promo}" удален')
         await state.clear()
-        await call.message.answer('Возврат в меню.', reply_markup=main_kb(
-            await get_user_info(call.message.from_user.id, 2)))
+        await call.message.answer('Возврат в меню.', reply_markup=main_inline_kb(check_to_admin))
 
 
-@start_router.message(F.text.in_({'✌️ О нашем VPN', '/about'}))
-async def about(message: Message):
-    await message.answer('Это бот для продажи, генерации, выдачи и управления\n'
-                         'ключами для Outline VPN.\n'
-                         'Наш сервер находится в Нидерландах, имеет низкий пинг и высокую скорость!\n'
-                         'А самое главное - наш VPN дешевый и доступен каждому!',
-                         reply_markup=buy_button())
+@start_router.callback_query(F.data == 'about')
+async def about(call: CallbackQuery):
+    await del_call_kb(call)
+    await call.message.answer('Это бот для продажи, генерации, выдачи и управления\n'
+                              'ключами для Outline VPN.\n'
+                              'Наш сервер находится в Нидерландах, имеет низкий пинг и высокую скорость!\n'
+                              'А самое главное - наш VPN дешевый и доступен каждому!',
+                              reply_markup=about_buttons())
 
 
-@start_router.message(F.text.in_({'🆘 Техподдержка', '/help'}))
-async def sup(message: Message):
-    await message.answer('Обращайтесь если столкнулись с какой-то проблемой\n'
-                         'Поддержка идет от старых сообщений к новым, поэтому флудить в лс не имеет смысла.',
-                         reply_markup=support_kb())
+@start_router.callback_query(F.data == 'help')
+async def sup(call: CallbackQuery):
+    await del_call_kb(call)
+    await call.message.answer('Обращайтесь если столкнулись с какой-то проблемой\n'
+                              'Поддержка идет от старых сообщений к новым, поэтому флудить в лс не имеет смысла.',
+                              reply_markup=support_kb())
 
 
-@start_router.message(F.text.in_({'👤 Профиль', '/profile'}))
-async def profile(message: Message):
-    await message.answer('👤 Профиль\n'
-                         f'├ <b>ИД</b>: {message.from_user.id}\n'
-                         f'└ <b>Никнейм</b>: @{message.from_user.username}',
-                         reply_markup=profile_kb())
+@start_router.callback_query(F.data == 'profile')
+async def profile(call: CallbackQuery):
+    await del_call_kb(call)
+    user_id, name, is_admin, is_sub, key, label, start_sub, end_sub = await get_user_info(call.from_user.id)
 
-
-@start_router.message(F.text == 'Домой 🏠')
-async def go_home(message: Message):
-    await message.answer('Возврат в меню.', reply_markup=main_kb(
-        await get_user_info(message.from_user.id, 2)))
+    if not is_sub:
+        key = 'Нет ключа'
+        await call.message.answer('👤 Профиль\n'
+                                  f'├ <b>ИД</b>: {call.from_user.id}\n'
+                                  f'├ <b>Никнейм</b>: @{call.from_user.username}\n'
+                                  f'├ <b>Подписка</b>: ❌\n'
+                                  f'└ <b>Ключ</b>:\n{key}',
+                                  reply_markup=profile_kb())
+    else:
+        await call.message.answer('👤 Профиль\n'
+                                  f'├ <b>ИД</b>: {call.from_user.id}\n'
+                                  f'├ <b>Никнейм</b>: @{call.from_user.username}\n'
+                                  f'├ <b>Подписка</b>: ✅\n'
+                                  f'├ <b>Начало подписки</b>: {start_sub}\n'
+                                  f'├ <b>Окончание подписки</b>: {end_sub}\n'
+                                  f'└ <b>Ключ</b>:\n{key}',
+                                  reply_markup=profile_kb())
 
 
 @start_router.callback_query(F.data == 'to_catalog')
@@ -128,15 +178,15 @@ async def server(call: CallbackQuery):
 
 @start_router.callback_query(F.data == 'get_home')
 async def to_homepage(call: CallbackQuery):
+    result = await get_user_info(call.from_user.id, 2)
     await del_call_kb(call)
-    await call.message.answer('Домой 🏠', reply_markup=main_kb(
-        await get_user_info(call.from_user.id, 2)
-    ))
+    await call.message.answer('Возврат в меню 🏠', reply_markup=main_inline_kb(result))
 
 
-@start_router.message(F.text.in_({'🛒 Купить VPN', '/buy'}))
-async def server(message: Message):
-    await message.answer('Выберите сервер', reply_markup=server_select())
+@start_router.callback_query(F.data == 'buy')
+async def server(call: CallbackQuery):
+    await del_call_kb(call)
+    await call.message.answer('Выберите сервер', reply_markup=server_select())
 
 
 @start_router.callback_query(F.data == 'netherlands_server')
@@ -160,63 +210,96 @@ async def price(call: CallbackQuery):
 
 @start_router.callback_query(F.data.in_({'accept 150', 'accept 400', 'accept 650', 'cancel'}))
 async def result_of_buy(call: CallbackQuery):
+    check_to_admin = await get_user_info(call.from_user.id, 2)
     result = call.data.split()
     await del_call_kb(call)
     if result[0] == 'accept':
-        link, label = payment(int(result[1]), str(call.from_user.id)+str(data_for_individual_label))
+        link, label = payment(int(result[1]), str(call.from_user.id) + str(data_for_individual_label))
         await add_label(call.from_user.id, label)
-        await call.message.answer(f'Ваша ссылка на оплату подписки:', reply_markup=pay(link))
-        await call.message.answer('После оплаты напишите в чат "Оплатил" либо "Оплатила"\n'
-                                  'А также можно оплатить переводом. Для этого напишите админу.',
+        LinkMsg.msg = await call.message.answer(f'Внимание!\nБанк может взымать комиссию!\n'
+                                                f'Ваша ссылка на оплату подписки:', reply_markup=pay(link))
+        await call.message.answer('После оплаты нажмите на соответствующую кнопку\n',
+                                  reply_markup=payed(),
                                   callback_data=result[1])
 
     else:
         await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
-                                  reply_markup=main_kb(await get_user_info(call.message.from_user.id, 2)))
+                                  reply_markup=main_inline_kb(check_to_admin))
 
 
-@start_router.message(F.text.lower().in_({'оплатил', 'оплатила'}))
-async def check_payment_handler(message: Message):
-    payment_label = await get_user_info(message.from_user.id, 5)
+@start_router.callback_query(F.data == 'confirm_pay')
+async def check_payment_handler(call: CallbackQuery):
+    await del_call_kb(call)
+    payment_label = await get_user_info(call.from_user.id, 5)
     result = check_payment(payment_label)
     if result is not False:
         amount = {145: 4, 436: 12, 630: 24}  # Кол-во недель исходя из суммы оплаты
-        await set_for_subscribe(message.from_user.id, amount[result])
-        await message.answer('Оплата прошла успешно')
-        await confirm_pay(message=message)
+        await set_for_subscribe(call.from_user.id, amount[result])
+        await call.message.answer('Оплата прошла успешно')
+        await confirm_pay(call=call)
     else:
-        await message.answer('Оплата не поступала. Попробуйте позже, либо свяжитесь с поддержкой.')
+        await call.message.answer('Оплата не поступала. Попробуйте позже, либо свяжитесь с поддержкой.',
+                                  reply_markup=payed())
 
 
-@start_router.message(F.text == '🔥Промо🔥')
-async def want_test(message: Message):
-    await message.answer('Выберите действие', reply_markup=want_to_test())
+@start_router.callback_query(F.data == 'cancel_pay')
+async def cancel_pay(call: CallbackQuery):
+    check_to_admin = await get_user_info(call.from_user.id, 2)
+    await del_call_kb(call, True)
+    await del_label(call.from_user.id)
+    await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
+                              reply_markup=main_inline_kb(check_to_admin))
 
 
-@start_router.callback_query(F.data == 'promo')
+@start_router.callback_query(F.data == 'promo_step_1')
+async def want_test(call: CallbackQuery):
+    await del_call_kb(call)
+    await call.message.answer('Выберите действие', reply_markup=want_to_test())
+
+
+@start_router.callback_query(F.data == 'promo_step_2')
 async def promik(call: CallbackQuery, state: FSMContext):
     await del_call_kb(call)
-    await call.message.answer('⬇️ Введите промокод ⬇️', reply_markup=home())
+    await call.message.answer('⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
     await state.set_state(Form.promokod)
 
 
 @start_router.message(F.text, Form.promokod)
 async def check_promo(message: Message, state: FSMContext):
+    check_to_admin = await get_user_info(message.from_user.id, 2)
     await state.update_data(promokod=message.text)
-    await message.answer('Промокод проверяется... ⏳')
-    data = await state.get_data()
-    promo = (data['promokod'])
+    LinkMsg.msg = (await message.answer('Промокод проверяется... ⏳'))
+    data_promo = await state.get_data()
+    promo = (data_promo['promokod'])
     promo_info = await pop_promo(promo)
+    await del_message_kb(message)
     if promo_info is not False:
+        await del_message_kb(message)
         promo_time = promo_info[1]
         await set_for_subscribe(message.from_user.id, promo_time)
         await message.answer(f'Промокод {promo} активирован! 🔥\n'
-                             f'Вам предоставлен тестовый доступ на {promo_time} недель.\n'
-                             'Ожидайте ключ и инструкцию', reply_markup=home())
+                             f'Вам предоставлен доступ на {promo_time} недель.\n'
+                             'Ожидайте ключ и инструкцию', reply_markup=main_inline_kb(check_to_admin))
         await state.clear()
-        await confirm_pay(message=message)
+        await confirm_pay(call=message)
     else:
+        await del_message_kb(message, True)
         await message.answer('Такого промокода не существует')
-        await state.clear()
-        await message.answer('Возврат в меню.', reply_markup=main_kb(
-            await get_user_info(message.from_user.id, 2)))
+        await message.answer('⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
+        await state.set_state(Form.promokod)
+
+
+@start_router.callback_query(F.data == 'cancel_promo')
+async def cancel_promo(call: CallbackQuery, state: FSMContext):
+    check_to_admin = await get_user_info(call.from_user.id, 2)
+    await state.clear()
+    await del_call_kb(call)
+    await del_message_kb(call.message, True)
+    await call.message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
+
+
+@start_router.message(F.text)
+async def nothing(message: Message):
+    check_to_admin = await get_user_info(message.from_user.id, 2)
+    await del_message_kb(message, True)
+    await message.answer('Error 404', reply_markup=main_inline_kb(check_to_admin))

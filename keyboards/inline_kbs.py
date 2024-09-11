@@ -2,6 +2,27 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
+def main_inline_kb(res: bool):
+    kb_list = [
+        [InlineKeyboardButton(text='✌️ О нашем VPN', callback_data='about'),
+         InlineKeyboardButton(text='🆘 Техподдержка', callback_data='help')],
+        [InlineKeyboardButton(text="🛒 Купить VPN", callback_data='buy'),
+         InlineKeyboardButton(text='👤 Профиль', callback_data='profile')],
+        [InlineKeyboardButton(text="🔥 Промо🔥", callback_data='promo_step_1')]
+    ]
+    if res is True:
+        kb_list.append([InlineKeyboardButton(text='🔥 Админка', callback_data='adminka')])
+    return InlineKeyboardMarkup(inline_keyboard=kb_list)
+
+
+def about_buttons():
+    button = [
+        [InlineKeyboardButton(text="🛒 Купить VPN", callback_data='to_catalog')],
+        [InlineKeyboardButton(text='🏠 Домой', callback_data='get_home')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=button)
+
+
 def support_kb():
     inline_kb_support = [
         [InlineKeyboardButton(text='🆘 Написать саппорту 🆘', url='tg://resolve?domain=w1nn3r1337')],
@@ -46,8 +67,8 @@ def accept_or_not(sum_of):
 
 def want_to_test():
     inline_kb_test = [
-        [InlineKeyboardButton(text='Ввести промокод ⚡️', callback_data='promo')],
-        [InlineKeyboardButton(text='Попросить у админа 🙃', url='tg://resolve?domain=w1nn3r1337')],
+        [InlineKeyboardButton(text='Ввести промокод ⚡️', callback_data='promo_step_2')],
+        [InlineKeyboardButton(text='Написать админу 🙃', url='tg://resolve?domain=w1nn3r1337')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_test)
@@ -55,7 +76,8 @@ def want_to_test():
 
 def admin_actions():
     inline_kb = [
-        [InlineKeyboardButton(text='Добавить/Удалить промокод', callback_data='add_del_promo_next_step')]
+        [InlineKeyboardButton(text='Добавить/Удалить промокод', callback_data='add_del_promo_next_step')],
+        [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
@@ -91,5 +113,20 @@ def apps():
 def guide():
     inline_kb = [
         [InlineKeyboardButton(text='Прочитать', url='https://telegra.ph/Nastrojka-VPN-08-03')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def payed():
+    inline_kb = [
+        [InlineKeyboardButton(text='✅ Оплатил(-а)', callback_data='confirm_pay')],
+        [InlineKeyboardButton(text='❌ Передумал(-а) оплачивать', callback_data='cancel_pay')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def cancel_kb():
+    inline_kb = [
+        [InlineKeyboardButton(text='Отменить ввод и вернуться в меню', callback_data='cancel_promo')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

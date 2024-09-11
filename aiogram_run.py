@@ -1,7 +1,6 @@
 import asyncio
 from create_bot import bot, dp
-from handlers.start import start_router
-from keyboards.all_kb import set_commands
+from handlers.start import start_router, set_commands
 
 
 async def main():

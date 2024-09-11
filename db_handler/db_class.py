@@ -1,4 +1,4 @@
-import asyncio
+
 from work_time.time_func import *
 
 import asyncpg
@@ -94,7 +94,7 @@ async def get_user_info(user_id, param: int = None):
                 ''', user_id)
     await con.close()
     if result:
-        if param:
+        if param is not None:
             return result[param]
         return result
     return False
@@ -125,6 +125,14 @@ async def add_label(user_id, label: str):
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))
     await con.execute(f'''
         UPDATE users SET payment_label = '{label}' WHERE user_id = '{user_id}'
+                ''')
+    await con.close()
+
+
+async def del_label(user_id):
+    con = await asyncpg.connect(dsn=config('DATABASE_URL'))
+    await con.execute(f'''
+        UPDATE users SET payment_label = null WHERE user_id = '{user_id}'
                 ''')
     await con.close()
 

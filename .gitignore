@@ -131,6 +131,6 @@ dmypy.json
 .idea/
 .ruff_cache/
 .vscode/
-venv/
 .env.dist
 *.pyc
+/math strings.py

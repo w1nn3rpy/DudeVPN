@@ -174,3 +174,17 @@ async def set_user_vpn_key(user_id, key: str):
     finally:
         if con:
             await con.close()
+
+
+async def update_username(user_id, username: str):
+    con = None
+    try:
+        con = await asyncpg.connect(dsn=config('DATABASE_URL'))
+        await con.execute(f'''
+        UPDATE users SET name = $1 WHERE user_id = $2 
+                        ''', username, user_id)
+    except Exception as e:
+        print(str(e))
+    finally:
+        if con:
+            await con.close()

@@ -88,6 +88,10 @@ async def cmd_start(message: Message):
                          'Что интересует?', reply_markup=main_inline_kb(check_to_admin))
     if not await get_user_info(message.from_user.id):
         await new_user(message.from_user.id, message.from_user.username)
+    else:
+        user_id, name, is_admin, is_sub, key, label, start_sub, end_sub = await get_user_info(message.from_user.id)
+        if name != message.from_user.username:
+            await update_username(message.from_user.id, message.from_user.username)
 
 
 @start_router.callback_query(F.data == 'adminka')
@@ -150,14 +154,15 @@ async def sup(call: CallbackQuery):
 async def profile(call: CallbackQuery):
     await del_call_kb(call)
     user_id, name, is_admin, is_sub, key, label, start_sub, end_sub = await get_user_info(call.from_user.id)
-
+    if name is not None:
+        name = '@' + name
     if not is_sub:
         key = 'Нет ключа'
         await call.message.answer('👤 Профиль\n'
-                                  f'├ <b>ИД</b>: {call.from_user.id}\n'
-                                  f'├ <b>Никнейм</b>: @{call.from_user.username}\n'
+                                  f'├ <b>ИД</b>: {user_id}\n'
+                                  f'├ <b>Никнейм</b>: {name}\n'
                                   f'├ <b>Подписка</b>: ❌\n'
-                                  f'└ <b>Ключ</b>:\n{key}',
+                                  f'└ <b>Ключ</b>: {key}',
                                   reply_markup=profile_kb())
     else:
         await call.message.answer('👤 Профиль\n'

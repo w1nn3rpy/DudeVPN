@@ -74,14 +74,34 @@ async def del_message_kb(message: Message, *param):
 
 
 async def confirm_pay(call):
+    check_old_key = await get_user_info(call.from_user.id, 4)
+    check_to_admin = await get_user_info(call.from_user.id, 2)
+
+
+    try:
+        if check_old_key is not False:
+            key_id = await get_key_id_from_url(check_old_key)
+            await delete_key(key_id)
+    except Exception as e:
+        print(str(e))
+
     key = create_new_key(call.from_user.id, call.from_user.username).access_url
     await set_user_vpn_key(call.from_user.id, key)
     await call.message.answer(f'Ваш ключ:\n \n{key}\n \n\nВыберите свою платформу для скачивания приложения\n',
                               reply_markup=apps())
     await call.message.answer('Инструкция по настройке', reply_markup=guide())
+    await call.message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
 
 
 async def confirm_pay_msg(message):
+    check_old_key = await get_user_info(message.from_user.id, 4)
+    try:
+        if check_old_key is not False:
+            key_id = await get_key_id_from_url(check_old_key)
+            await delete_key(key_id)
+    except Exception as e:
+        print(str(e))
+
     key = create_new_key(message.from_user.id, message.from_user.username).access_url
     check_to_admin = await get_user_info(message.from_user.id, 2)
     await set_user_vpn_key(message.from_user.id, key)
@@ -256,12 +276,6 @@ async def cancel_pay(call: CallbackQuery):
     await del_label(call.from_user.id)
     await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
                               reply_markup=main_inline_kb(check_to_admin))
-
-
-@start_router.callback_query(F.data == 'promo_step_1')
-async def want_test(call: CallbackQuery):
-    await del_call_kb(call)
-    await call.message.answer('Выберите действие', reply_markup=want_to_test())
 
 
 @start_router.callback_query(F.data == 'promo_step_2')

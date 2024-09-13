@@ -57,15 +57,6 @@ def accept_or_not(sum_of):
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_accept)
 
 
-def want_to_test():
-    inline_kb_test = [
-        [InlineKeyboardButton(text='Ввести промокод ⚡️', callback_data='promo_step_2')],
-        [InlineKeyboardButton(text='Написать админу 🙃', url='tg://resolve?domain=w1nn3r1337')],
-        [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=inline_kb_test)
-
-
 def admin_actions():
     inline_kb = [
         [InlineKeyboardButton(text='Добавить/Удалить промокод', callback_data='add_del_promo_next_step')],

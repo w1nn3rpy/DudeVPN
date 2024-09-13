@@ -17,6 +17,7 @@ def main_inline_kb(res: bool):
 
 def about_buttons():
     button = [
+        [InlineKeyboardButton(text='📜 Новости и конкурсы 🎉', url='tg://resolve?domain=Dude_VPN')],
         [InlineKeyboardButton(text="🛒 Купить VPN", callback_data='buy')],
         [InlineKeyboardButton(text='🏠 Домой', callback_data='get_home')]
     ]

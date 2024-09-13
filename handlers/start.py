@@ -1,12 +1,11 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 from keyboards.inline_kbs import *
 from create_bot import bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import BotCommand, BotCommandScopeDefault
-
 
 from db_handler.db_class import *
 
@@ -18,7 +17,8 @@ start_router = Router()
 
 
 async def set_commands():
-    commands = [BotCommand(command='start', description='Старт')]
+    commands = [BotCommand(command='start', description='Старт'),
+                BotCommand(command='buy', description='Купить VPN')]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 
@@ -81,6 +81,16 @@ async def confirm_pay(call):
     await call.message.answer('Инструкция по настройке', reply_markup=guide())
 
 
+async def confirm_pay_msg(message):
+    key = create_new_key(message.from_user.id, message.from_user.username).access_url
+    check_to_admin = await get_user_info(message.from_user.id, 2)
+    await set_user_vpn_key(message.from_user.id, key)
+    await message.answer(f'Ваш ключ:\n \n{key}\n \n\nВыберите свою платформу для скачивания приложения\n',
+                         reply_markup=apps())
+    await message.answer('Инструкция по настройке', reply_markup=guide())
+    await message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
+
+
 @start_router.message(CommandStart())
 async def cmd_start(message: Message):
     check_to_admin = await get_user_info(message.from_user.id, 2)  # проверка права is_admin [True/False]
@@ -92,6 +102,12 @@ async def cmd_start(message: Message):
         user_id, name, is_admin, is_sub, key, label, start_sub, end_sub = await get_user_info(message.from_user.id)
         if name != message.from_user.username:
             await update_username(message.from_user.id, message.from_user.username)
+
+
+@start_router.message(Command('buy'))
+async def cmd_buy(message: Message):
+    await del_message_kb(message)
+    await message.answer('Выберите сервер', reply_markup=server_select())
 
 
 @start_router.callback_query(F.data == 'adminka')
@@ -142,14 +158,6 @@ async def about(call: CallbackQuery):
                               reply_markup=about_buttons())
 
 
-@start_router.callback_query(F.data == 'help')
-async def sup(call: CallbackQuery):
-    await del_call_kb(call)
-    await call.message.answer('Обращайтесь если столкнулись с какой-то проблемой\n'
-                              'Поддержка идет от старых сообщений к новым, поэтому флудить в лс не имеет смысла.',
-                              reply_markup=support_kb())
-
-
 @start_router.callback_query(F.data == 'profile')
 async def profile(call: CallbackQuery):
     await del_call_kb(call)
@@ -173,12 +181,6 @@ async def profile(call: CallbackQuery):
                                   f'├ <b>Окончание подписки</b>: {end_sub}\n'
                                   f'└ <b>Ключ</b>:\n{key}',
                                   reply_markup=profile_kb())
-
-
-@start_router.callback_query(F.data == 'to_catalog')
-async def server(call: CallbackQuery):
-    await del_call_kb(call)
-    await call.message.answer('Выберите сервер', reply_markup=server_select())
 
 
 @start_router.callback_query(F.data == 'get_home')
@@ -271,7 +273,6 @@ async def promik(call: CallbackQuery, state: FSMContext):
 
 @start_router.message(F.text, Form.promokod)
 async def check_promo(message: Message, state: FSMContext):
-    check_to_admin = await get_user_info(message.from_user.id, 2)
     await state.update_data(promokod=message.text)
     LinkMsg.msg = (await message.answer('Промокод проверяется... ⏳'))
     data_promo = await state.get_data()
@@ -284,9 +285,9 @@ async def check_promo(message: Message, state: FSMContext):
         await set_for_subscribe(message.from_user.id, promo_time)
         await message.answer(f'Промокод {promo} активирован! 🔥\n'
                              f'Вам предоставлен доступ на {promo_time} недель.\n'
-                             'Ожидайте ключ и инструкцию', reply_markup=main_inline_kb(check_to_admin))
+                             'Ожидайте ключ и инструкцию')
         await state.clear()
-        await confirm_pay(call=message)
+        await confirm_pay_msg(message)
     else:
         await del_message_kb(message, True)
         await message.answer('Такого промокода не существует')

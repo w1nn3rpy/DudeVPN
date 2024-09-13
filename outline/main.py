@@ -16,8 +16,8 @@ def get_keys() -> list:
 
 vpn_keys = get_keys()
 
-# for key in vpn_keys:
-#     print(key)
+for key in vpn_keys:
+    print(key)
 
 
 def get_key_from_id(key_id: str) -> str:
@@ -48,9 +48,19 @@ def delete_limit(key_id: str) -> None:
     return client.delete_data_limit(key_id=key_id)
 
 
-def delete_key(key_id: str) -> None:
+async def delete_key(key_id: str) -> None:
     """
     Удаляет ключ
     """
     return client.delete_key(key_id=key_id)
 
+
+async def get_key_id_from_url(access_url: str):
+    """
+    Поиск id ключа по ключу.
+    Принимает ключ,
+    возвращает id ключа
+    """
+    for key in vpn_keys:
+        if key.access_url == access_url:
+            return key.key_id

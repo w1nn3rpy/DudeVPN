@@ -5,10 +5,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 def main_inline_kb(res: bool):
     kb_list = [
         [InlineKeyboardButton(text='✌️ О нашем VPN', callback_data='about'),
-         InlineKeyboardButton(text='🆘 Техподдержка', callback_data='help')],
-        [InlineKeyboardButton(text="🛒 Купить VPN", callback_data='buy'),
+         InlineKeyboardButton(text='🆘 Техподдержка', url='tg://resolve?domain=w1nn3r1337')],
+        [InlineKeyboardButton(text="🔥 Ввести промокод", callback_data='promo_step_2'),
          InlineKeyboardButton(text='👤 Профиль', callback_data='profile')],
-        [InlineKeyboardButton(text="🔥 Промо🔥", callback_data='promo_step_1')]
+        [InlineKeyboardButton(text="🛒 Купить VPN", callback_data='buy')]
     ]
     if res is True:
         kb_list.append([InlineKeyboardButton(text='🔥 Админка', callback_data='adminka')])
@@ -17,18 +17,10 @@ def main_inline_kb(res: bool):
 
 def about_buttons():
     button = [
-        [InlineKeyboardButton(text="🛒 Купить VPN", callback_data='to_catalog')],
+        [InlineKeyboardButton(text="🛒 Купить VPN", callback_data='buy')],
         [InlineKeyboardButton(text='🏠 Домой', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=button)
-
-
-def support_kb():
-    inline_kb_support = [
-        [InlineKeyboardButton(text='🆘 Написать саппорту 🆘', url='tg://resolve?domain=w1nn3r1337')],
-        [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=inline_kb_support)
 
 
 def profile_kb():

@@ -104,7 +104,9 @@ def guide():
 def payed():
     inline_kb = [
         [InlineKeyboardButton(text='✅ Оплатил(-а)', callback_data='confirm_pay')],
-        [InlineKeyboardButton(text='❌ Передумал(-а) оплачивать', callback_data='cancel_pay')]
+        [InlineKeyboardButton(text='❌ Передумал(-а) оплачивать', callback_data='cancel_pay')],
+        [InlineKeyboardButton(text='🆘 Сообщить о проблеме', url='tg://resolve?domain=w1nn3r1337')],
+
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 

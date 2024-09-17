@@ -26,7 +26,7 @@ def about_buttons():
 
 def profile_kb():
     inline_kb_profile = [
-        [InlineKeyboardButton(text='🔍 В каталог', callback_data='to_catalog')],
+        [InlineKeyboardButton(text='🔍 В каталог', callback_data='buy')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_profile)
@@ -50,10 +50,19 @@ def select_time_kb():
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_buy)
 
 
-def accept_or_not(sum_of):
+def select_payment_system(sum_of):
+    inline_kb_systems = [
+        [InlineKeyboardButton(text='ЮMoney (возможна комиссия)', callback_data=f'yoomoney_{str(sum_of)}')],
+        [InlineKeyboardButton(text='СБП (Комиссия 0%)', callback_data=f'sbp_{str(sum_of)}')],
+        # [InlineKeyboardButton(text='Перевод на карту', callback_data=f'card_transfer_{str(sum_of)}')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_systems)
+
+
+def accept_or_not(pay_system, sum_of):
     inline_kb_accept = [
-        [InlineKeyboardButton(text='✅ Подтвердить', callback_data='accept' + ' ' + str(sum_of)),
-         InlineKeyboardButton(text='❌ Отмена', callback_data='cancel')]
+        [InlineKeyboardButton(text='✅ Подтвердить', callback_data=f'accept_{str(pay_system)}_{str(sum_of)}')],
+        [InlineKeyboardButton(text='❌ Отмена', callback_data='cancel')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_accept)
 
@@ -101,9 +110,10 @@ def guide():
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
 
-def payed():
+def payed(payment_system, price):
     inline_kb = [
-        [InlineKeyboardButton(text='✅ Оплатил(-а)', callback_data='confirm_pay')],
+        [InlineKeyboardButton(text='✅ Оплатил(-а)',
+                              callback_data=f'confirm-pay_{payment_system}_{price}')],
         [InlineKeyboardButton(text='❌ Передумал(-а) оплачивать', callback_data='cancel_pay')],
         [InlineKeyboardButton(text='🆘 Сообщить о проблеме', url='tg://resolve?domain=w1nn3r1337')],
 
@@ -114,5 +124,23 @@ def payed():
 def cancel_kb():
     inline_kb = [
         [InlineKeyboardButton(text='Отменить ввод и вернуться в меню', callback_data='cancel_promo')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def accept_or_not_check(user_id):
+    inline_kb = [
+        [InlineKeyboardButton(text='✅ Подтвердить (1м)', callback_data=f'accept-check_4_{user_id}')],
+        [InlineKeyboardButton(text='✅ Подтвердить (3м)', callback_data=f'accept-check_12_{user_id}')],
+        [InlineKeyboardButton(text='✅ Подтвердить (6м)', callback_data=f'accept-check_24_{user_id}')],
+
+        [InlineKeyboardButton(text='❌ Отклонить', callback_data=f'decline-check_{user_id}')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def get_key_kb(time_subscribe):
+    inline_kb = [
+        [InlineKeyboardButton(text='Получить ключ', callback_data=f'get-key_{time_subscribe}')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

@@ -8,14 +8,20 @@ client = Client(token)
 user = client.account_info()
 
 
-data = datetime.date(datetime.now())
-minutes = datetime.time(datetime.now()).minute
-data_for_individual_label = '{}{}{}{}'.format(
-    data.year,
-    data.month,
-    data.day,
-    minutes
-)
+def math_date():
+    """
+    Генерация числа из года, дня и минут для создания лейбла
+    :return:
+    """
+    data = datetime.date(datetime.now())
+    minutes = datetime.time(datetime.now()).minute
+    data_for_individual_label = '{}{}{}{}'.format(
+        data.year,
+        data.month,
+        data.day,
+        minutes
+    )
+    return data_for_individual_label
 
 
 def payment(is_sum: int, is_label: str) -> str | tuple:

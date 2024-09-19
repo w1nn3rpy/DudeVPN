@@ -1,6 +1,4 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 def main_inline_kb(res: bool):
     kb_list = [
@@ -54,7 +52,8 @@ def select_payment_system(sum_of):
     inline_kb_systems = [
         [InlineKeyboardButton(text='ЮMoney (возможна комиссия)', callback_data=f'yoomoney_{str(sum_of)}')],
         [InlineKeyboardButton(text='СБП (Комиссия 0%)', callback_data=f'sbp_{str(sum_of)}')],
-        # [InlineKeyboardButton(text='Перевод на карту', callback_data=f'card_transfer_{str(sum_of)}')]
+        [InlineKeyboardButton(text='Перевод на карту', callback_data=f'card-transfer_{str(sum_of)}')],
+        [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_systems)
 

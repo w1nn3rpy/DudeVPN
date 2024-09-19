@@ -2,7 +2,6 @@ from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, ContentType
 from keyboards.inline_kbs import *
-from create_bot import bot, dp
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import BotCommand, BotCommandScopeDefault
@@ -86,9 +85,11 @@ async def confirm_pay(call, amount_month):
 
         key = create_new_key(call.from_user.id, call.from_user.username).access_url
         await set_user_vpn_key(call.from_user.id, key)
-        await call.message.answer(f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
-                                  f'\nВыберите свою платформу для скачивания приложения',
-                                  reply_markup=apps())
+        await call.message.answer_photo(
+            'AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+            f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
+            f'\nВыберите свою платформу для скачивания приложения',
+            reply_markup=apps())
         await call.message.answer('Инструкция по настройке', reply_markup=guide())
         await set_for_subscribe(call.from_user.id, int(amount_month))
         await call.message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
@@ -110,9 +111,11 @@ async def confirm_pay_msg(message):
     key = create_new_key(message.from_user.id, message.from_user.username).access_url
     check_to_admin = await get_user_info(message.from_user.id, 2)
     await set_user_vpn_key(message.from_user.id, key)
-    await message.answer(f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
-                         f'\nВыберите свою платформу для скачивания приложения',
-                         reply_markup=apps())
+    await message.answer_photo(
+        'AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+        f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
+        f'\nВыберите свою платформу для скачивания приложения',
+        reply_markup=apps())
     await message.answer('Инструкция по настройке', reply_markup=guide())
     await message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
 
@@ -120,8 +123,10 @@ async def confirm_pay_msg(message):
 @start_router.message(CommandStart())
 async def cmd_start(message: Message):
     check_to_admin = await get_user_info(message.from_user.id, 2)  # проверка права is_admin [True/False]
-    await message.answer('Привет, я - DudeVPN бот. Здесь ты можешь купить качественный VPN по низким ценам\n'
-                         'Что интересует?', reply_markup=main_inline_kb(check_to_admin))
+    await message.answer_photo(
+        'AgACAgIAAxkBAAIGmmbr60YDj4cbgOkyVzgF830kgpXaAAJn3jEbiOpgS9sv5zISetjwAQADAgADeQADNgQ',
+        'Привет, я - DudeVPN бот. Здесь ты можешь купить качественный VPN по низким ценам\n'
+        'Что интересует?', reply_markup=main_inline_kb(check_to_admin))
     if not await get_user_info(message.from_user.id):
         await new_user(message.from_user.id, message.from_user.username)
     else:
@@ -133,7 +138,9 @@ async def cmd_start(message: Message):
 @start_router.message(Command('buy'))
 async def cmd_buy(message: Message):
     await del_message_kb(message)
-    await message.answer('Выберите сервер', reply_markup=server_select())
+    await message.answer_photo(
+        'AgACAgIAAxkBAAIGnGbr66cBeDGlY9b7DkKLeQOegh5TAAJu3jEbiOpgSwdxD9kp_CUiAQADAgADeQADNgQ',
+        'Выберите сервер', reply_markup=server_select())
 
 
 @start_router.callback_query(F.data == 'adminka')
@@ -177,11 +184,13 @@ async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
 @start_router.callback_query(F.data == 'about')
 async def about(call: CallbackQuery):
     await del_call_kb(call)
-    await call.message.answer('Это бот для продажи, генерации, выдачи и управления\n'
-                              'ключами для Outline VPN.\n'
-                              'Наш сервер находится в Нидерландах, имеет низкий пинг и высокую скорость!\n'
-                              'А самое главное - наш VPN дешевый и доступен каждому!',
-                              reply_markup=about_buttons())
+    await call.message.answer_photo(
+        'AgACAgIAAxkBAAIGk2br6lpToHCw-NkbMFQKqdCPndkdAAJK4zEb-HxZS2wMfOdlWQ3xAQADAgADeQADNgQ',
+        'Это бот для продажи, генерации, выдачи и управления\n'
+        'ключами для Outline VPN.\n'
+        'Наш сервер находится в Нидерландах, имеет низкий пинг и высокую скорость!\n'
+        'А самое главное - наш VPN дешевый и доступен каждому!',
+        reply_markup=about_buttons())
 
 
 @start_router.callback_query(F.data == 'profile')
@@ -192,40 +201,50 @@ async def profile(call: CallbackQuery):
         name = '@' + name
     if not is_sub:
         key = 'Нет ключа'
-        await call.message.answer('👤 Профиль\n'
-                                  f'├ <b>ИД</b>: {user_id}\n'
-                                  f'├ <b>Никнейм</b>: {name}\n'
-                                  f'├ <b>Подписка</b>: ❌\n'
-                                  f'└ <b>Ключ</b>: {key}',
-                                  reply_markup=profile_kb())
+        await call.message.answer_photo(
+            'AgACAgIAAxkBAAIGmGbr6sURo337__Np46tsG30XmfXgAAJg3jEbiOpgSymcDn4l7BmMAQADAgADeQADNgQ',
+            '👤 Профиль\n'
+            f'├ <b>ИД</b>: {user_id}\n'
+            f'├ <b>Никнейм</b>: {name}\n'
+            f'├ <b>Подписка</b>: ❌\n'
+            f'└ <b>Ключ</b>: {key}',
+            reply_markup=profile_kb())
     else:
-        await call.message.answer('👤 Профиль\n'
-                                  f'├ <b>ИД</b>: {call.from_user.id}\n'
-                                  f'├ <b>Никнейм</b>: {name}\n'
-                                  f'├ <b>Подписка</b>: ✅\n'
-                                  f'├ <b>Начало подписки</b>: {start_sub}\n'
-                                  f'├ <b>Окончание подписки</b>: {end_sub}\n'
-                                  f'└ <b>Ключ</b>:\n{key}',
-                                  reply_markup=profile_kb())
+        await call.message.answer_photo(
+            'AgACAgIAAxkBAAIGmGbr6sURo337__Np46tsG30XmfXgAAJg3jEbiOpgSymcDn4l7BmMAQADAgADeQADNgQ',
+            '👤 Профиль\n'
+            f'├ <b>ИД</b>: {call.from_user.id}\n'
+            f'├ <b>Никнейм</b>: {name}\n'
+            f'├ <b>Подписка</b>: ✅\n'
+            f'├ <b>Начало подписки</b>: {start_sub}\n'
+            f'├ <b>Окончание подписки</b>: {end_sub}\n'
+            f'└ <b>Ключ</b>:\n{key}',
+            reply_markup=profile_kb())
 
 
 @start_router.callback_query(F.data == 'get_home')
 async def to_homepage(call: CallbackQuery):
     result = await get_user_info(call.from_user.id, 2)
     await del_call_kb(call)
-    await call.message.answer('Возврат в меню 🏠', reply_markup=main_inline_kb(result))
+    await call.message.answer_photo(
+        'AgACAgIAAxkBAAIGmmbr60YDj4cbgOkyVzgF830kgpXaAAJn3jEbiOpgS9sv5zISetjwAQADAgADeQADNgQ',
+        'Возврат в меню 🏠', reply_markup=main_inline_kb(result))
 
 
 @start_router.callback_query(F.data == 'buy')
 async def server(call: CallbackQuery):
     await del_call_kb(call)
-    await call.message.answer('Выберите сервер', reply_markup=server_select())
+    await call.message.answer_photo(
+        'AgACAgIAAxkBAAIGnGbr66cBeDGlY9b7DkKLeQOegh5TAAJu3jEbiOpgSwdxD9kp_CUiAQADAgADeQADNgQ',
+        'Выберите сервер', reply_markup=server_select())
 
 
 @start_router.callback_query(F.data == 'netherlands_server')
 async def buy(call: CallbackQuery):
     await del_call_kb(call)
-    await call.message.answer('Выберите срок подписки', reply_markup=select_time_kb())
+    await call.message.answer_photo(
+        'AgACAgIAAxkBAAIGnmbr6-pz1EPYnHJZCjzbujARy9nRAAJv3jEbiOpgS57c-ua-kWxIAQADAgADeQADNgQ',
+        'Выберите срок подписки', reply_markup=select_time_kb())
 
 
 @start_router.callback_query(F.data.in_({'one_month', 'three_months', 'six_months'}))
@@ -234,7 +253,8 @@ async def price(call: CallbackQuery):
     price_dict = {'one_month': 150,
                   'three_months': 400,
                   'six_months': 650}
-    await call.message.answer(
+    await call.message.answer_photo(
+        'AgACAgIAAxkBAAIGoGbr7C9IWJn2fz9uCB98bX6CZ_LRAAJx3jEbiOpgSxbAl7od8PeeAQADAgADeQADNgQ',
         f'<b>Стоимость подписки</b>: {price_dict[call.data]}р.\n'
         '\n<b>Выберите способ оплаты</b>',
         reply_markup=select_payment_system(price_dict[call.data])
@@ -272,15 +292,18 @@ async def result_yoomoney_pay(call: CallbackQuery):
         link, label = payment(int(result[2]), str(call.from_user.id) + math_date())
         print(f'Создан лейбл: {label}')
         await add_label(call.from_user.id, label)
-        LinkMsg.msg = await call.message.answer(f'Внимание!\nБанк может взымать комиссию!\n'
-                                                f'Ваша ссылка на оплату подписки:', reply_markup=pay(link))
-        await call.message.answer('После оплаты нажмите на соответствующую кнопку\n',
-                                  reply_markup=payed('yoomoney', result[-1]),
-                                  callback_data=result[-1])
+        LinkMsg.msg = await call.message.answer(
+            f'Внимание!\nБанк может взымать комиссию!\n'
+            f'Ваша ссылка на оплату подписки:', reply_markup=pay(link))
+        await call.message.answer(
+            'После оплаты нажмите на соответствующую кнопку\n',
+            reply_markup=payed('yoomoney', result[-1]),
+            callback_data=result[-1])
 
     else:
-        await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
-                                  reply_markup=main_inline_kb(check_to_admin))
+        await call.message.answer(
+            'Оплата отменена ❌.\nВозврат в меню.',
+            reply_markup=main_inline_kb(check_to_admin))
 
 
 @start_router.callback_query(lambda c: c.data.startswith('confirm-pay_yoomoney_'))
@@ -291,35 +314,49 @@ async def check_payment_yoomoney(call: CallbackQuery):
     if result is not False:
         amount = {145: 4, 388: 12, 630: 24}  # Кол-во недель исходя из суммы оплаты
         time_on = amount[result]
-        await call.message.answer('Оплата прошла успешно')
+        await call.message.answer_photo(
+            'AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+            'Оплата прошла успешно')
         await confirm_pay(call=call, amount_month=time_on)
     else:
-        await call.message.answer('Оплата не поступала. Попробуйте через несколько минут, либо свяжитесь с поддержкой.',
-                                  reply_markup=payed('yoomoney', 0))
+        await call.message.answer(
+            'Оплата не поступала. Попробуйте через несколько минут, либо свяжитесь с поддержкой.',
+            reply_markup=payed('yoomoney', 0))
 
 
-@start_router.callback_query(F.data.in_({'accept_sbp_150', 'accept_sbp_400', 'accept_sbp_650', 'cancel'}))
+@start_router.callback_query(F.data.in_({'accept_sbp_150', 'accept_sbp_400', 'accept_sbp_650',
+                                         'accept_card-transfer_150', 'accept_card-transfer_400',
+                                         'accept_card-transfer_650',
+                                         'cancel'}))
 async def result_sbp_pay(call: CallbackQuery):
     check_to_admin = await get_user_info(call.from_user.id, 2)
     result = call.data.split('_')
+    payment_system = result[1]
     price = result[-1]
+    number = None
     await del_call_kb(call)
     if result[0] == 'accept':
+        if payment_system == 'sbp':
+            number = f'<b>Номер телефона</b>: {config('PHONE_NUMBER')}'
+        elif payment_system == 'card-transfer':
+            number = f'<b>Номер карты</b>: {config('CARD_NUMBER')}'
         await call.message.answer('Для оплаты подписки переведите указанную сумму на указанный номер')
         await call.message.answer(f'Данные для перевода:\n'
                                   f'\n<b>Сумма</b>: {price}\n'
-                                  f'<b>Номер получателя</b>: +79773509019\n'
+                                  f'{number}\n'
                                   f'<b>Банк получателя</b>: Т.Банк (Тинькофф)\n'
                                   f'<b>Данные получателя</b>: Дмитрий О.')
         await call.message.answer('Сделайте скриншот перевода и нажмите кнопку "Подтвердить"',
-                                  reply_markup=payed('sbp', str(price)))
+                                  reply_markup=payed(payment_system=payment_system, price=str(price)))
 
     else:
         await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
                                   reply_markup=main_inline_kb(check_to_admin))
 
 
-@start_router.callback_query(F.data.in_({'confirm-pay_sbp_150', 'confirm-pay_sbp_400', 'confirm-pay_sbp_650'}))
+@start_router.callback_query(F.data.in_({'confirm-pay_sbp_150', 'confirm-pay_sbp_400', 'confirm-pay_sbp_650',
+                                         'confirm-pay_card-transfer_150', 'confirm-pay_card-transfer_400',
+                                         'confirm-pay_card-transfer_650'}))
 async def check_payment_sbp(call: CallbackQuery, state: FSMContext):
     await del_call_kb(call)
     await call.message.answer('Прикрепите и отправьте в чат скриншот перевода')
@@ -343,8 +380,21 @@ async def confirm_check(call: CallbackQuery):
     user_id = call.data.split('_')[-1]
     time_subscribe = call.data.split('_')[1]
     await del_call_kb(call)
-    await bot.send_message(user_id, 'Оплата подтверждена!\n'
-                                    'Нажмите кнопку, чтобы получить ключ!', reply_markup=get_key_kb(time_subscribe))
+    await bot.send_photo(
+        chat_id=user_id,
+        photo='AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+        caption='Оплата подтверждена!\n'
+                'Нажмите кнопку, чтобы получить ключ!', reply_markup=get_key_kb(time_subscribe))
+    await call.message.answer('Клиент уведомллен!')
+
+
+@start_router.callback_query(lambda c: c.data.startswith('decline-check_'))
+async def decline_check(call: CallbackQuery):
+    user_id = call.data.split('_')[-1]
+    check_to_admin = await get_user_info(call.from_user.id, 2)
+
+    await del_call_kb(call)
+    await bot.send_message(user_id, 'Отказано!', reply_markup=main_inline_kb(check_to_admin))
     await call.message.answer('Клиент уведомллен!')
 
 
@@ -367,7 +417,9 @@ async def cancel_pay(call: CallbackQuery):
 @start_router.callback_query(F.data == 'promo_step_2')
 async def promik(call: CallbackQuery, state: FSMContext):
     await del_call_kb(call)
-    await call.message.answer('⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
+    await call.message.answer_photo(
+        'AgACAgIAAxkBAAIGpGbr7SiMD4pANZ7LzLLZ1wPyWDULAAJ-3jEbiOpgSw8z0kOsql8SAQADAgADeQADNgQ',
+        '⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
     await state.set_state(Form.promokod)
 
 
@@ -391,7 +443,9 @@ async def check_promo(message: Message, state: FSMContext):
     else:
         await del_message_kb(message, True)
         await message.answer('Такого промокода не существует')
-        await message.answer('⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
+        await message.answer_photo(
+            'AgACAgIAAxkBAAIGpGbr7SiMD4pANZ7LzLLZ1wPyWDULAAJ-3jEbiOpgSw8z0kOsql8SAQADAgADeQADNgQ',
+            '⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
         await state.set_state(Form.promokod)
 
 

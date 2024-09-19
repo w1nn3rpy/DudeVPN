@@ -301,7 +301,8 @@ async def result_yoomoney_pay(call: CallbackQuery):
             callback_data=result[-1])
 
     else:
-        await call.message.answer(
+        await call.message.answer_photo(
+            config('MAIN_MENU'),
             'Оплата отменена ❌.\nВозврат в меню.',
             reply_markup=main_inline_kb(check_to_admin))
 
@@ -350,8 +351,10 @@ async def result_sbp_pay(call: CallbackQuery):
                                   reply_markup=payed(payment_system=payment_system, price=str(price)))
 
     else:
-        await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
-                                  reply_markup=main_inline_kb(check_to_admin))
+        await call.message.answer_photo(
+            config('MAIN_MENU'),
+            'Оплата отменена ❌.\nВозврат в меню.',
+            reply_markup=main_inline_kb(check_to_admin))
 
 
 @start_router.callback_query(F.data.in_({'confirm-pay_sbp_150', 'confirm-pay_sbp_400', 'confirm-pay_sbp_650',
@@ -410,8 +413,10 @@ async def cancel_pay(call: CallbackQuery):
     check_to_admin = await get_user_info(call.from_user.id, 2)
     await del_call_kb(call, True)
     await del_label(call.from_user.id)
-    await call.message.answer('Оплата отменена ❌.\nВозврат в меню.',
-                              reply_markup=main_inline_kb(check_to_admin))
+    await call.message.answer_photo(
+        config('MAIN_MENU'),
+        'Оплата отменена ❌.\nВозврат в меню.',
+        reply_markup=main_inline_kb(check_to_admin))
 
 
 @start_router.callback_query(F.data == 'promo_step_2')
@@ -455,14 +460,20 @@ async def cancel_promo(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await del_call_kb(call)
     await del_message_kb(call.message, True)
-    await call.message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
+    await call.message.answer_photo(
+        config('MAIN_MENU'),
+        'Возврат в меню',
+        reply_markup=main_inline_kb(check_to_admin))
 
 
 @start_router.message(F.text)
 async def nothing(message: Message):
     check_to_admin = await get_user_info(message.from_user.id, 2)
     await del_message_kb(message, True)
-    await message.answer('Error 404', reply_markup=main_inline_kb(check_to_admin))
+    await message.answer_photo(
+        config('MAIN_MENU'),
+        'Error 404',
+        reply_markup=main_inline_kb(check_to_admin))
 
 
 @start_router.callback_query(F.data)

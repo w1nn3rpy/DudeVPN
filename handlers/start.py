@@ -86,7 +86,7 @@ async def confirm_pay(call, amount_month):
         key = create_new_key(call.from_user.id, call.from_user.username).access_url
         await set_user_vpn_key(call.from_user.id, key)
         await call.message.answer_photo(
-            'AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+            config('CONGRATS'),
             f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
             f'\nВыберите свою платформу для скачивания приложения',
             reply_markup=apps())
@@ -112,7 +112,7 @@ async def confirm_pay_msg(message):
     check_to_admin = await get_user_info(message.from_user.id, 2)
     await set_user_vpn_key(message.from_user.id, key)
     await message.answer_photo(
-        'AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+        config('CONGRATS'),
         f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
         f'\nВыберите свою платформу для скачивания приложения',
         reply_markup=apps())
@@ -124,7 +124,7 @@ async def confirm_pay_msg(message):
 async def cmd_start(message: Message):
     check_to_admin = await get_user_info(message.from_user.id, 2)  # проверка права is_admin [True/False]
     await message.answer_photo(
-        'AgACAgIAAxkBAAIGmmbr60YDj4cbgOkyVzgF830kgpXaAAJn3jEbiOpgS9sv5zISetjwAQADAgADeQADNgQ',
+        config('ABOUT'),
         'Привет, я - DudeVPN бот. Здесь ты можешь купить качественный VPN по низким ценам\n'
         'Что интересует?', reply_markup=main_inline_kb(check_to_admin))
     if not await get_user_info(message.from_user.id):
@@ -139,7 +139,7 @@ async def cmd_start(message: Message):
 async def cmd_buy(message: Message):
     await del_message_kb(message)
     await message.answer_photo(
-        'AgACAgIAAxkBAAIGnGbr66cBeDGlY9b7DkKLeQOegh5TAAJu3jEbiOpgSwdxD9kp_CUiAQADAgADeQADNgQ',
+        config('SERVERS'),
         'Выберите сервер', reply_markup=server_select())
 
 
@@ -185,7 +185,7 @@ async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
 async def about(call: CallbackQuery):
     await del_call_kb(call)
     await call.message.answer_photo(
-        'AgACAgIAAxkBAAIGk2br6lpToHCw-NkbMFQKqdCPndkdAAJK4zEb-HxZS2wMfOdlWQ3xAQADAgADeQADNgQ',
+        config('ABOUT'),
         'Это бот для продажи, генерации, выдачи и управления\n'
         'ключами для Outline VPN.\n'
         'Наш сервер находится в Нидерландах, имеет низкий пинг и высокую скорость!\n'
@@ -202,7 +202,7 @@ async def profile(call: CallbackQuery):
     if not is_sub:
         key = 'Нет ключа'
         await call.message.answer_photo(
-            'AgACAgIAAxkBAAIGmGbr6sURo337__Np46tsG30XmfXgAAJg3jEbiOpgSymcDn4l7BmMAQADAgADeQADNgQ',
+            config('PROFILE'),
             '👤 Профиль\n'
             f'├ <b>ИД</b>: {user_id}\n'
             f'├ <b>Никнейм</b>: {name}\n'
@@ -211,7 +211,7 @@ async def profile(call: CallbackQuery):
             reply_markup=profile_kb())
     else:
         await call.message.answer_photo(
-            'AgACAgIAAxkBAAIGmGbr6sURo337__Np46tsG30XmfXgAAJg3jEbiOpgSymcDn4l7BmMAQADAgADeQADNgQ',
+            config('PROFILE'),
             '👤 Профиль\n'
             f'├ <b>ИД</b>: {call.from_user.id}\n'
             f'├ <b>Никнейм</b>: {name}\n'
@@ -227,7 +227,7 @@ async def to_homepage(call: CallbackQuery):
     result = await get_user_info(call.from_user.id, 2)
     await del_call_kb(call)
     await call.message.answer_photo(
-        'AgACAgIAAxkBAAIGmmbr60YDj4cbgOkyVzgF830kgpXaAAJn3jEbiOpgS9sv5zISetjwAQADAgADeQADNgQ',
+        config('MAIN_MENU'),
         'Возврат в меню 🏠', reply_markup=main_inline_kb(result))
 
 
@@ -235,7 +235,7 @@ async def to_homepage(call: CallbackQuery):
 async def server(call: CallbackQuery):
     await del_call_kb(call)
     await call.message.answer_photo(
-        'AgACAgIAAxkBAAIGnGbr66cBeDGlY9b7DkKLeQOegh5TAAJu3jEbiOpgSwdxD9kp_CUiAQADAgADeQADNgQ',
+        config('SERVERS'),
         'Выберите сервер', reply_markup=server_select())
 
 
@@ -243,7 +243,7 @@ async def server(call: CallbackQuery):
 async def buy(call: CallbackQuery):
     await del_call_kb(call)
     await call.message.answer_photo(
-        'AgACAgIAAxkBAAIGnmbr6-pz1EPYnHJZCjzbujARy9nRAAJv3jEbiOpgS57c-ua-kWxIAQADAgADeQADNgQ',
+        config('SUB_TIME'),
         'Выберите срок подписки', reply_markup=select_time_kb())
 
 
@@ -254,7 +254,7 @@ async def price(call: CallbackQuery):
                   'three_months': 400,
                   'six_months': 650}
     await call.message.answer_photo(
-        'AgACAgIAAxkBAAIGoGbr7C9IWJn2fz9uCB98bX6CZ_LRAAJx3jEbiOpgSxbAl7od8PeeAQADAgADeQADNgQ',
+        config('PAYMENT_METHOD'),
         f'<b>Стоимость подписки</b>: {price_dict[call.data]}р.\n'
         '\n<b>Выберите способ оплаты</b>',
         reply_markup=select_payment_system(price_dict[call.data])
@@ -315,7 +315,7 @@ async def check_payment_yoomoney(call: CallbackQuery):
         amount = {145: 4, 388: 12, 630: 24}  # Кол-во недель исходя из суммы оплаты
         time_on = amount[result]
         await call.message.answer_photo(
-            'AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+            config('CONGRATS'),
             'Оплата прошла успешно')
         await confirm_pay(call=call, amount_month=time_on)
     else:
@@ -382,7 +382,7 @@ async def confirm_check(call: CallbackQuery):
     await del_call_kb(call)
     await bot.send_photo(
         chat_id=user_id,
-        photo='AgACAgIAAxkBAAIGombr7ILYRxgXcXAfS5MSqPqvLYeoAAJ43jEbiOpgS7c4tUhaqEoGAQADAgADeQADNgQ',
+        photo=config('CONGRATS'),
         caption='Оплата подтверждена!\n'
                 'Нажмите кнопку, чтобы получить ключ!', reply_markup=get_key_kb(time_subscribe))
     await call.message.answer('Клиент уведомллен!')
@@ -418,7 +418,7 @@ async def cancel_pay(call: CallbackQuery):
 async def promik(call: CallbackQuery, state: FSMContext):
     await del_call_kb(call)
     await call.message.answer_photo(
-        'AgACAgIAAxkBAAIGpGbr7SiMD4pANZ7LzLLZ1wPyWDULAAJ-3jEbiOpgSw8z0kOsql8SAQADAgADeQADNgQ',
+        config('PROMO'),
         '⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
     await state.set_state(Form.promokod)
 
@@ -444,7 +444,7 @@ async def check_promo(message: Message, state: FSMContext):
         await del_message_kb(message, True)
         await message.answer('Такого промокода не существует')
         await message.answer_photo(
-            'AgACAgIAAxkBAAIGpGbr7SiMD4pANZ7LzLLZ1wPyWDULAAJ-3jEbiOpgSw8z0kOsql8SAQADAgADeQADNgQ',
+            config('PROMO'),
             '⬇️ Введите промокод ⬇️', reply_markup=cancel_kb())
         await state.set_state(Form.promokod)
 
@@ -468,4 +468,3 @@ async def nothing(message: Message):
 @start_router.callback_query(F.data)
 async def anycalls(call: CallbackQuery):
     print(str(call.data))
-

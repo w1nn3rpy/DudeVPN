@@ -469,14 +469,3 @@ async def nothing(message: Message):
 async def anycalls(call: CallbackQuery):
     print(str(call.data))
 
-
-@start_router.message(F.photo)
-async def get_file_id(message: Message):
-    # Получаем наибольшее по размеру изображение
-    largest_photo = message.photo[-1]
-
-    # Получаем file_id этого изображения
-    file_id = largest_photo.file_id
-
-    # Отправляем file_id обратно в чат
-    await message.answer(f"File ID изображения: {file_id}")

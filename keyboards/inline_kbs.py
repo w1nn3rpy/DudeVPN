@@ -40,9 +40,9 @@ def server_select():
 
 def select_time_kb():
     inline_kb_buy = [
-        [InlineKeyboardButton(text='1 Месяц', callback_data='one_month')],
-        [InlineKeyboardButton(text='3 Месяца', callback_data='three_months')],
-        [InlineKeyboardButton(text='6 Месяцев', callback_data='six_months')],
+        [InlineKeyboardButton(text='1 Месяц | 150р', callback_data='one_month')],
+        [InlineKeyboardButton(text='3 Месяца | 400р', callback_data='three_months')],
+        [InlineKeyboardButton(text='6 Месяцев | 650р', callback_data='six_months')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_buy)
@@ -69,6 +69,8 @@ def accept_or_not(pay_system, sum_of):
 def admin_actions():
     inline_kb = [
         [InlineKeyboardButton(text='Добавить/Удалить промокод', callback_data='add_del_promo_next_step')],
+        [InlineKeyboardButton(text='Добавить сервер', callback_data='add_server')],
+        [InlineKeyboardButton(text='Проверить сервер', callback_data='check_server')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
@@ -80,6 +82,18 @@ def add_del_promo_kb():
         [InlineKeyboardButton(text='Удалить промокод', callback_data='del_promo')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+
+def check_server_kb(list_of_users: list):
+
+    inline_kb = InlineKeyboardMarkup(inline_keyboard=[])
+
+    for user in list_of_users:
+        inline_kb.inline_keyboard.append([InlineKeyboardButton(text=f'{user}', callback_data=f'check-user_{user}')])
+
+    inline_kb.inline_keyboard.append([InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')])
+
+    return inline_kb
 
 
 def pay(link):

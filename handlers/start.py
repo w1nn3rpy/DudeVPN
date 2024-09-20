@@ -184,6 +184,19 @@ async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
         await call.message.answer('Возврат в меню.', reply_markup=main_inline_kb(check_to_admin))
 
 
+@start_router.callback_query(F.data == 'check_server')
+async def check_server(call: CallbackQuery):
+    vpn_keys = get_keys()
+    users = list()
+    for keys in vpn_keys:  # Создаём список из айди ключей(а также пользователей) с подпиской
+        if keys.name:
+            users.append(keys.name)
+        else:
+            users.append(keys.key_id)
+    print(users)
+    await call.message.answer(f'Заполненность сервера: {len(vpn_keys)}/20', reply_markup=check_server_kb(users))
+
+
 @start_router.callback_query(F.data == 'about')
 async def about(call: CallbackQuery):
     await del_call_kb(call)

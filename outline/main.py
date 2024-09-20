@@ -14,13 +14,8 @@ def get_keys() -> list:
     return client.get_keys()
 
 
-vpn_keys = get_keys()
-
-for key in vpn_keys:
-    print(key)
-
-
 def get_key_from_id(key_id: str) -> str:
+    vpn_keys = get_keys()
     for key in vpn_keys:
         if key.key_id == key_id:
             return key.access_url
@@ -56,6 +51,7 @@ async def delete_key(key_id: str) -> None:
 
 
 async def get_key_id_from_url(access_url: str):
+    vpn_keys = get_keys()
     """
     Поиск id ключа по ключу.
     Принимает ключ,

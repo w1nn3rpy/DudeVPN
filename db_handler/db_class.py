@@ -143,6 +143,9 @@ async def del_label(user_id):
 
 
 async def set_for_subscribe(user_id, buy_on):
+    """
+    buy_on - кол-во недель подписки
+    """
     start_time, end_time = get_time_for_subscribe(buy_on)
 
     con = await asyncpg.connect(dsn=config('DATABASE_URL'))

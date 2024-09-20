@@ -98,26 +98,29 @@ async def confirm_pay(call, amount_month):
         print(str(e))
 
 
-async def confirm_pay_msg(message):
+async def confirm_pay_msg(message, amount_month):
     check_old_key = await get_user_info(message.from_user.id, 4)
+    check_to_admin = await get_user_info(message.from_user.id, 2)
+
     try:
         if check_old_key is not False:
-            key_id = await get_key_id_from_url(check_old_key)
-            await delete_key(key_id)
+            # key_id = await get_key_id_from_url(check_old_key)
+            await delete_key(message.from_user.id)
             await set_for_unsubscribe(message.from_user.id)
+
+        key = create_new_key(message.from_user.id, message.from_user.username).access_url
+        await set_user_vpn_key(message.from_user.id, key)
+        await message.answer_photo(
+            config('CONGRATS'),
+            f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
+            f'\nВыберите свою платформу для скачивания приложения',
+            reply_markup=apps())
+        await message.answer('Инструкция по настройке', reply_markup=guide())
+        await set_for_subscribe(message.from_user.id, int(amount_month))
+        await message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
+
     except Exception as e:
         print(str(e))
-
-    key = create_new_key(message.from_user.id, message.from_user.username).access_url
-    check_to_admin = await get_user_info(message.from_user.id, 2)
-    await set_user_vpn_key(message.from_user.id, key)
-    await message.answer_photo(
-        config('CONGRATS'),
-        f'Ваш ключ:\n <pre language="c++">{key}</pre>\n'
-        f'\nВыберите свою платформу для скачивания приложения',
-        reply_markup=apps())
-    await message.answer('Инструкция по настройке', reply_markup=guide())
-    await message.answer('Возврат в меню', reply_markup=main_inline_kb(check_to_admin))
 
 
 @start_router.message(CommandStart())
@@ -439,12 +442,11 @@ async def check_promo(message: Message, state: FSMContext):
     if promo_info is not False:
         await del_message_kb(message)
         promo_time = promo_info[1]
-        await set_for_subscribe(message.from_user.id, promo_time)
         await message.answer(f'Промокод {promo} активирован! 🔥\n'
                              f'Вам предоставлен доступ на {promo_time} недель.\n'
                              'Ожидайте ключ и инструкцию')
         await state.clear()
-        await confirm_pay_msg(message)
+        await confirm_pay_msg(message, promo_time)
     else:
         await del_message_kb(message, True)
         await message.answer('Такого промокода не существует')
@@ -474,8 +476,3 @@ async def nothing(message: Message):
         config('MAIN_MENU'),
         'Error 404',
         reply_markup=main_inline_kb(check_to_admin))
-
-
-@start_router.callback_query(F.data)
-async def anycalls(call: CallbackQuery):
-    print(str(call.data))

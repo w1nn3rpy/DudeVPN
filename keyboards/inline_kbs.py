@@ -70,7 +70,9 @@ def admin_actions():
     inline_kb = [
         [InlineKeyboardButton(text='Добавить/Удалить промокод', callback_data='add_del_promo_next_step')],
         [InlineKeyboardButton(text='Добавить сервер', callback_data='add_server')],
-        [InlineKeyboardButton(text='Проверить сервер', callback_data='check_server')],
+        [InlineKeyboardButton(text='Проверить сервера', callback_data='check_server')],
+        [InlineKeyboardButton(text='"Спам" всем', callback_data='spam_all'),
+         InlineKeyboardButton(text='"Спам" подписчикам', callback_data='spam_sub')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

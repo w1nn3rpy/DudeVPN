@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery, ContentType
+from aiogram.types import Message, CallbackQuery
 from keyboards.inline_kbs import *
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -192,7 +192,7 @@ async def check_server(call: CallbackQuery):
         if keys.name:
             users.append(keys.name)
         else:
-            users.append(keys.key_id)
+            users.append('id=' + keys.key_id)
     print(users)
     await call.message.answer(f'Заполненность сервера: {len(vpn_keys)}/20', reply_markup=check_server_kb(users))
 

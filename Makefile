@@ -1,7 +1,7 @@
 build:
 	docker build -t dudevpn_bot_image .
 run:
-	docker run -it -d --env-file .env --restart=unless-stopped --name dudevpn_bot dudevpn_bot_image
+	docker run -it -d --network my_network --env-file .env --restart=unless-stopped --name dudevpn_bot dudevpn_bot_image
 stop:
 	docker stop dudevpn_bot
 attach:
@@ -12,6 +12,3 @@ dell:
 
 clear:
 	rm -rf aiogram_run.py create_bot.py db_handler handlers keyboards outline payment work_time
-
-pull:
-	git pull

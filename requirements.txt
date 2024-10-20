@@ -1,6 +1,6 @@
-asyncpg
-aiogram
-APScheduler
-python-decouple
-outline-vpn-api
-yoomoney
+aiogram==3.13.1
+APScheduler==3.10.4
+asyncpg==0.29.0
+outline-vpn-api==6.3.0
+python-decouple==3.8
+YooMoney==0.1.1

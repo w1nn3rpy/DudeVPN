@@ -52,7 +52,6 @@ def select_payment_system(sum_of):
     inline_kb_systems = [
         [InlineKeyboardButton(text='ЮMoney (возможна комиссия)', callback_data=f'yoomoney_{str(sum_of)}')],
         [InlineKeyboardButton(text='СБП (Комиссия 0%)', callback_data=f'sbp_{str(sum_of)}')],
-        [InlineKeyboardButton(text='Перевод на карту', callback_data=f'card-transfer_{str(sum_of)}')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_systems)
@@ -71,8 +70,7 @@ def admin_actions():
         [InlineKeyboardButton(text='Добавить/Удалить промокод', callback_data='add_del_promo_next_step')],
         [InlineKeyboardButton(text='Добавить сервер', callback_data='add_server')],
         [InlineKeyboardButton(text='Проверить сервера', callback_data='check_server')],
-        [InlineKeyboardButton(text='"Спам" всем', callback_data='spam_all'),
-         InlineKeyboardButton(text='"Спам" подписчикам', callback_data='spam_sub')],
+        [InlineKeyboardButton(text='Рассылка сообщения', callback_data='spamming')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
@@ -136,9 +134,9 @@ def payed(payment_system, price):
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
 
-def cancel_kb():
+def cancel_fsm_kb():
     inline_kb = [
-        [InlineKeyboardButton(text='Отменить ввод и вернуться в меню', callback_data='cancel_promo')]
+        [InlineKeyboardButton(text='Отменить ввод и вернуться в меню', callback_data='cancel_FSM')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
@@ -158,4 +156,14 @@ def get_key_kb(time_subscribe):
     inline_kb = [
         [InlineKeyboardButton(text='Получить ключ', callback_data=f'get-key_{time_subscribe}')]
     ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+def target_for_spam():
+    inline_kb = [
+        [InlineKeyboardButton(text='Разослать ВСЕМ ПОЛЬЗОВАТЕЛЯМ С ПОДПИСКОЙ',
+                              callback_data='spam_sub')],
+        [InlineKeyboardButton(text='Разослать всем', callback_data='spam_all')],
+        [InlineKeyboardButton(text='❌ Отменить', callback_data='cancel_FSM')]
+    ]
+
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

@@ -1,3 +1,4 @@
+import asyncio
 
 from work_time.time_func import *
 
@@ -241,3 +242,36 @@ async def check_end_subscribe():
 
     finally:
         await con.close()
+
+async def get_sub_ids():
+    con = None
+    try:
+        con = await asyncpg.connect(dsn=config('DATABASE_URL'))
+        query = """
+         SELECT user_id
+         FROM users
+         WHERE is_subscriber = True
+         """
+        ids = await con.fetch(query)
+        return [record['user_id'] for record in ids]
+    except Exception as e:
+        print(e)
+    finally:
+        if con:
+            await con.close()
+
+async def get_all_ids():
+    con = None
+    try:
+        con = await asyncpg.connect(dsn=config('DATABASE_URL'))
+        query = """
+         SELECT user_id
+         FROM users
+         """
+        ids = await con.fetch(query)
+        return [record['user_id'] for record in ids]
+    except Exception as e:
+        print(e)
+    finally:
+        if con:
+            await con.close()

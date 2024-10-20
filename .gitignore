@@ -134,3 +134,4 @@ dmypy.json
 .env.dist
 *.pyc
 /math strings.py
+.DS_Store

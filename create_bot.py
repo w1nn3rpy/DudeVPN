@@ -6,9 +6,14 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from decouple import config
 
+def clear_logs():
+    with open('logs.log', 'w'):
+        pass
+
+clear_logs()
+
 logging.basicConfig(
     filename='logs.log',
-    filemode='w',
     level=logging.INFO,
     format='%(levelname)s %(filename)s: [%(asctime)s] - %(message)s',
     datefmt='%d-%m-%Y %H:%M:%S')

@@ -1,6 +1,7 @@
+from datetime import datetime
+
 from yoomoney import Client, Quickpay
 from decouple import config
-from datetime import datetime
 
 
 token = config('YOOMONEY_TOKEN')

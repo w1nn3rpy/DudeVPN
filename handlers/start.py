@@ -2,16 +2,13 @@ import os
 
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
-from keyboards.inline_kbs import *
-from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery, BotCommand, BotCommandScopeDefault
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import BotCommand, BotCommandScopeDefault
+from aiogram.fsm.context import FSMContext
 
+from keyboards.inline_kbs import *
 from db_handler.db_class import *
-
 from payment.main import *
-
 from outline.main import *
 
 start_router = Router()

@@ -1,10 +1,7 @@
-import asyncio
+import asyncpg
+from decouple import config
 
 from work_time.time_func import *
-
-import asyncpg
-
-from decouple import config
 from create_bot import bot
 from outline.main import get_key_id_from_url, delete_key
 

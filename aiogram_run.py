@@ -1,5 +1,6 @@
 import asyncio
-from create_bot import bot, dp, clear_logs
+
+from create_bot import bot, dp
 from handlers.admin_handlers import admin_router
 from handlers.start import start_router, set_commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -9,7 +10,6 @@ from db_handler.db_class import check_end_subscribe
 def start_scheduler():
     scheduler = AsyncIOScheduler()
     scheduler.add_job(check_end_subscribe, 'interval', hours=24)
-    scheduler.add_job(clear_logs, 'interval', hours=24)
     scheduler.start()
 
 

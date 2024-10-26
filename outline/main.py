@@ -1,5 +1,6 @@
-from outline.config import client
 from outline_vpn.outline_vpn import OutlineKey
+
+from outline.config import client
 
 
 def get_keys() -> list:

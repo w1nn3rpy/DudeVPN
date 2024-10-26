@@ -1,3 +1,5 @@
+import os
+
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
@@ -398,6 +400,9 @@ async def cancel_fsm(call: CallbackQuery, state: FSMContext):
         'Возврат в меню',
         reply_markup=main_inline_kb(check_to_admin))
 
+@start_router.message(F.text == 'clear')
+def clear_console(message: Message):
+    os.system('clear')
 
 @start_router.message(F.text)
 async def nothing(message: Message):

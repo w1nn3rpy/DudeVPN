@@ -7,6 +7,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from decouple import config
 
 logging.basicConfig(
+    filename='logs.log',
+    filemode='w',
     level=logging.INFO,
     format='%(levelname)s %(filename)s: [%(asctime)s] - %(message)s',
     datefmt='%d-%m-%Y %H:%M:%S')

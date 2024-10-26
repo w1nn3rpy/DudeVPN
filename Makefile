@@ -9,6 +9,8 @@ attach:
 dell:
 	docker rm dudevpn_bot
 	docker image remove dudevpn_bot_image
-
-clear:
-	rm -rf aiogram_run.py create_bot.py db_handler handlers keyboards outline payment work_time
+update:
+	make stop
+	make dell
+	make build
+	make run

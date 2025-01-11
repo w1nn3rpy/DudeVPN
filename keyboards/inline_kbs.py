@@ -52,7 +52,8 @@ def apps_kb():
                                   '/store/apps/details?id=org.outline.android.client&pcampaignid=web_share')],
         [InlineKeyboardButton(text='💻 Клиент для MacOS',
                               url='https://apps.apple.com/us/app/outline-secure-internet-access/id1356178125?mt=12')],
-        [InlineKeyboardButton(text='🖥️ Клиент для Windows', url='https://outline-vpn.com/download.php?os=c_windows')]
+        [InlineKeyboardButton(text='🖥️ Клиент для Windows', url='https://outline-vpn.com/download.php?os=c_windows')],
+        [InlineKeyboardButton(text='📖 Инструкция', url='https://telegra.ph/Nastrojka-VPN-08-03')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 

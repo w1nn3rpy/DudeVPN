@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, Union
+from decouple import config
 
 from create_bot import bot, logger
 from database.db_admin import get_country_by_id
@@ -31,11 +32,12 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await delete_messages(call)
 
-    await call.message.answer(text=MENU_TEXT.format(username=call.from_user.full_name
-                               if call.from_user.full_name
-                               else call.from_user.username),
-                               reply_markup=await
-                               main_inline_kb(call.from_user.id))
+    await call.message.answer_photo(photo=config('MAIN_MENU'),
+                                    caption=MENU_TEXT.format(username=call.from_user.full_name
+                                   if call.from_user.full_name
+                                   else call.from_user.username),
+                                   reply_markup=await
+                                   main_inline_kb(call.from_user.id))
 
 #####################################################################################################################
 
@@ -53,7 +55,7 @@ async def server_select_handler(event: Message | CallbackQuery, state: FSMContex
 
     if user_data['is_subscriber'] is False:
         await state.set_state(Buy.server_select)
-        await bot.send_message(chat_id=event.from_user.id, text=SERVER_SELECT, reply_markup=await server_select_kb())
+        await bot.send_photo(photo=config('SERVERS'), chat_id=event.from_user.id, caption=SERVER_SELECT, reply_markup=await server_select_kb())
 
     else:
         await state.set_state(Buy.time_select)
@@ -71,8 +73,8 @@ async def server_select_handler(event: Message | CallbackQuery, state: FSMContex
 
         end_subscribe = user_data['end_subscribe']
         formatted_data = end_subscribe.strftime('%d.%m.%Y')
-        await bot.send_message(chat_id=event.from_user.id,
-                               text=EXTEND_SUBSCRIPTION.format(end_subscription=formatted_data),
+        await bot.send_photo(photo=config('SUB_TIME'), chat_id=event.from_user.id,
+                               caption=EXTEND_SUBSCRIPTION.format(end_subscription=formatted_data),
                                reply_markup=select_time_kb())
 
 
@@ -91,7 +93,7 @@ async def time_select_handler(call: CallbackQuery, state: FSMContext):
     await state.update_data(server_id=server_id, country_name=country_name, country_id=country_id,
                             server_api=server_api, server_cert=server_cert)
 
-    await call.message.answer(text=TIME_SELECT, reply_markup=select_time_kb())
+    await call.message.answer_photo(photo=config('SUB_TIME'), caption=TIME_SELECT, reply_markup=select_time_kb())
 
 
 @payment_router.callback_query(Buy.time_select)
@@ -106,10 +108,11 @@ async def payment_system_select_handler(call: CallbackQuery, state: FSMContext):
     price = int(SUBSCRIPTION_OPTIONS[subscribe_idx]['price'])
     await state.update_data(sub_idx=subscribe_idx, sub_time=sub_time, price=price)
 
-    await call.message.answer(f'Вы выбрали:\n'
-                              f'<b>{country_name}</b>\n'
-                              f'Длительность: <b>{sub_time} мес.</b>\n'
-                              '\nВыберите способ оплаты 👇', reply_markup=select_payment_system_kb())
+    await call.message.answer_photo(photo=config('PAYMENT_METHOD'),
+                                    caption=f'Вы выбрали:\n'
+                                  f'<b>{country_name}</b>\n'
+                                  f'Длительность: <b>{sub_time} мес.</b>\n'
+                                  '\nВыберите способ оплаты 👇', reply_markup=select_payment_system_kb())
 
 
 @payment_router.callback_query(Buy.payment_system_select)

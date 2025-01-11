@@ -38,10 +38,11 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await delete_messages(call)
 
-    await call.message.answer(text=MENU_TEXT.format(username=call.from_user.full_name
-                               if call.from_user.full_name
-                               else call.from_user.username),
-                               reply_markup=await main_inline_kb(call.from_user.id))
+    await call.message.answer_photo(photo=config('MAIN_MENU'),
+                                    caption=MENU_TEXT.format(username=call.from_user.full_name
+                                   if call.from_user.full_name
+                                   else call.from_user.username),
+                                   reply_markup=await main_inline_kb(call.from_user.id))
 
 @admin_router.callback_query(F.data == 'admin_panel')
 async def admin_panel_handler(call: CallbackQuery):
@@ -65,21 +66,20 @@ async def spam_handler(call: CallbackQuery, state:FSMContext):
 
 @admin_router.message(SpamState.waiting_for_message)
 async def spam_message_handler(event: Message|CallbackQuery, state: FSMContext):
-    if isinstance(event, Message):
-        await delete_messages(event, 2)
-        if event.photo:
-            photo_id = event.photo[-1].file_id
-            caption = event.caption or 'Без подписи'
-            await state.update_data(spam_type='photo', caption=caption, photo_id=photo_id)
-            await event.answer('Ваше сообщение 👇👇👇')
-            await event.answer_photo(photo_id, caption=caption, reply_markup=target_for_spam_kb())
-            await state.set_state(SpamState.process_spam)
-        else:
-            text = event.text
-            await event.answer('Ваше сообщение 👇👇👇')
-            await event.answer(text, reply_markup=target_for_spam_kb())
-            await state.update_data(spam_type='text', message=text)
-            await state.set_state(SpamState.process_spam)
+    await delete_messages(event, 2)
+    if event.photo:
+        photo_id = event.photo[-1].file_id
+        caption = event.caption or 'Без подписи'
+        await state.update_data(spam_type='photo', caption=caption, photo_id=photo_id)
+        await event.answer('Ваше сообщение 👇👇👇')
+        await event.answer_photo(photo_id, caption=caption, reply_markup=target_for_spam_kb())
+        await state.set_state(SpamState.process_spam)
+    else:
+        text = event.text
+        await event.answer('Ваше сообщение 👇👇👇')
+        await event.answer(text, reply_markup=target_for_spam_kb())
+        await state.update_data(spam_type='text', message=text)
+        await state.set_state(SpamState.process_spam)
 
 
 @admin_router.callback_query(SpamState.process_spam)
@@ -148,10 +148,10 @@ async def add_del_promo(call: CallbackQuery, state: FSMContext):
 @admin_router.message(Promo.get_promo)
 async def action_with_promo(message: Message, state: FSMContext):
     await state.update_data(promo_code=message.text.split())
+    await delete_messages(message, 2)
     await message.answer(f'Вы ввели <b>{message.text}</b>\n'
                          f'Что делать с этим промокодом?', reply_markup=add_del_promo_kb())
     await state.set_state(Promo.action_with_promo)
-    await delete_messages(message)
 
 @admin_router.callback_query(Promo.action_with_promo)
 async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
@@ -173,10 +173,7 @@ async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
         await call.message.answer(f'Промокод "{promo_code}" удален')
         await state.clear()
         await call.message.answer('Возврат в меню.', reply_markup=await main_inline_kb(call.from_user.id))
-    else:
-        await state.clear()
-        await call.message.answer_photo(config('START'),
-                                        reply_markup=await main_inline_kb(call.from_user.id))
+
 
 #####################################################################################################################
 
@@ -224,8 +221,8 @@ async def add_server_func(call: CallbackQuery, state: FSMContext):
 
 @admin_router.message(ServerActions.add_server)
 async def process_server_data(message: Message, state: FSMContext):
-    await delete_messages(message, 2)
     server_data = message.text
+    await delete_messages(message, 2)
     try:
         countries = await get_countries()
         ip, user, password = server_data.split('///')
@@ -241,6 +238,7 @@ async def process_server_data(message: Message, state: FSMContext):
 @admin_router.callback_query(ServerActions.select_country)
 async def select_server_location(call: CallbackQuery, state: FSMContext):
 
+    await delete_messages(call)
     server_data = await state.get_data()
     ip = server_data.get('ip')
     user = server_data.get('user')
@@ -264,7 +262,6 @@ async def select_server_location(call: CallbackQuery, state: FSMContext):
 
 @admin_router.message(ServerActions.input_max_users)
 async def input_max_users(message: Message|CallbackQuery, state: FSMContext):
-    await delete_messages(message, 2) if isinstance(message, Message) else await delete_messages(message)
     if message.text.isdigit():
         max_users = int(message.text)
         await state.update_data(max_users=max_users)
@@ -273,12 +270,18 @@ async def input_max_users(message: Message|CallbackQuery, state: FSMContext):
         ip = server_data.get('ip')
         user = server_data.get('user')
         password = server_data.get('password')
+        await delete_messages(message, 2)
+
         await message.answer(f"Данные сервера:\nIP: {ip}\nUser: {user}\nPassword: {password}\n"
                              f"Страна: {country_name}\n"
                              f"Макс. пользователей: {max_users}\n"
                              f"\nЕсли данные верны - нажмите на кнопку.",
                              reply_markup=add_server_kb())
         await state.set_state(ServerActions.setup_new_server)
+
+    else:
+        await delete_messages(message, 2)
+        await message.answer('Введите ЧИСЛО')
 
 
 @admin_router.callback_query(ServerActions.setup_new_server)

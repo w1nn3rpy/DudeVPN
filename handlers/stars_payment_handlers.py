@@ -2,6 +2,7 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LabeledPrice, CallbackQuery
+from decouple import config
 
 from database.db_servers import edit_server_active_users_count
 from database.db_users import get_user_info, set_user_vpn_key, set_for_subscribe, extension_subscribe
@@ -40,10 +41,11 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await delete_messages(call)
 
-    await call.message.answer(text=MENU_TEXT.format(username=call.from_user.full_name
-                               if call.from_user.full_name
-                               else call.from_user.username),
-                               reply_markup=await main_inline_kb(call.from_user.id))
+    await call.message.answer_photo(photo=config('MAIN_MENU'),
+                                    caption=MENU_TEXT.format(username=call.from_user.full_name
+                                   if call.from_user.full_name
+                                   else call.from_user.username),
+                                   reply_markup=await main_inline_kb(call.from_user.id))
 
 @stars_payment_router.callback_query(Buy.confirm_payment_stars)
 async def confirm_payment_stars_handler(call: CallbackQuery, state: FSMContext):
@@ -64,7 +66,7 @@ async def successful_payment_handler(message: Message, state: FSMContext):
     payload = message.successful_payment.invoice_payload
 
     if payload == "subscription payment":
-
+        await delete_messages(message)
         user_data = await get_user_info(message.from_user.id)
         is_subscriber = user_data['is_subscriber']
         user_id = message.from_user.id
@@ -85,7 +87,8 @@ async def successful_payment_handler(message: Message, state: FSMContext):
                 await set_for_subscribe(user_id, int(duration) * 31, server_id)
                 await edit_server_active_users_count(server_id, 'add')
 
-                await message.answer('Спасибо за покупку!\n'
+                await message.answer_photo(photo=config('CONGRATS'),
+                                           caption='Спасибо за покупку!\n'
                                           f'Ваш ключ: <code>{key}</code>\n'
                                           f'\nВыберите свою платформу для скачивания приложения',
                                           reply_markup=apps_kb())
@@ -116,6 +119,7 @@ you can retrieve the relevant transaction ID from Settings > Your Stars and subm
 
 @stars_payment_router.message(Command(commands=['paysupport']))
 async def pay_support_handler(message: Message):
+    await delete_messages(message)
     await message.answer(
         text="Уже оплаченная подписка не подразумевает возврат средств, "  
         "однако, если вы очень хотите вернуть средства - свяжитесь с нами и мы обсудим вашу ситуацию.")

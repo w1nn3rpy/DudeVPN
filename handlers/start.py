@@ -42,7 +42,8 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await delete_messages(call)
 
-    await call.message.answer(text=MENU_TEXT.format(username=call.from_user.full_name
+    await call.message.answer_photo(photo=config('MAIN_MENU'),
+                                    caption=MENU_TEXT.format(username=call.from_user.full_name
                                if call.from_user.full_name
                                else call.from_user.username),
                                reply_markup=await main_inline_kb(call.from_user.id))
@@ -54,8 +55,8 @@ async def get_homepage_handler(call: CallbackQuery, state: FSMContext):
         await state.clear()
 
     await delete_messages(call)
-    await call.message.answer_photo(config('MAIN_MENU'),
-                                    MENU_TEXT.format(username=call.from_user.full_name
+    await call.message.answer_photo(photo=config('MAIN_MENU'),
+                                    caption=MENU_TEXT.format(username=call.from_user.full_name
                                     if call.from_user.full_name
                                     else call.from_user.username),
                                     reply_markup=await main_inline_kb(call.from_user.id))
@@ -93,8 +94,8 @@ async def cmd_start(message: Message, state: FSMContext):
         if name != message.from_user.username:
             await update_username(message.from_user.id, message.from_user.username)
 
-    await message.answer_photo(config('MAIN_MENU'),
-                                MENU_TEXT.format(username=message.from_user.full_name
+    await message.answer_photo(photo=config('MAIN_MENU'),
+                                caption=MENU_TEXT.format(username=message.from_user.full_name
                                 if message.from_user.full_name
                                 else message.from_user.username),
                                 reply_markup=await main_inline_kb(message.from_user.id))
@@ -109,9 +110,10 @@ async def about_handler(event: Message|CallbackQuery, state: FSMContext):
 
     await delete_messages(event)
     await state.set_state(Help.help_main)
-    await bot.send_message(chat_id=event.from_user.id,
-                           text=ABOUT_MENU,
-                           reply_markup=about_kb())
+    await bot.send_photo(photo=config('ABOUT'),
+                         chat_id=event.from_user.id,
+                         caption=ABOUT_MENU,
+                         reply_markup=about_kb())
 
 @start_router.callback_query(F.data == 'profile')
 async def profile(call: CallbackQuery):
@@ -127,16 +129,18 @@ async def profile(call: CallbackQuery):
         math_days_left = user_data['end_subscribe'] - datetime.now().date()
         days_left = math_days_left.days
         vpn_key = user_data['vpn_key']
-        await bot.send_message(chat_id=call.from_user.id,
-                               text=PROFILE_SUB.format(user_id=user_id,
+        await bot.send_photo(photo=config('PROFILE'),
+                             chat_id=call.from_user.id,
+                             caption=PROFILE_SUB.format(user_id=user_id,
                                                        username=username,
                                                        referral_count=referral_count,
                                                        balance=balance,
                                                        days_left=days_left,
                                                        key=vpn_key), reply_markup=profile_kb())
     if user_data['is_subscriber'] is False:
-        await bot.send_message(chat_id=call.from_user.id,
-                               text=PROFILE_NON_SUB.format(user_id=user_id,
+        await bot.send_photo(photo=config('PROFILE'),
+                             chat_id=call.from_user.id,
+                             caption=PROFILE_NON_SUB.format(user_id=user_id,
                                                            username=username,
                                                            referral_count=referral_count,
                                                            balance=balance), reply_markup=profile_kb())
@@ -166,56 +170,46 @@ async def promo_handler(message: Message, state: FSMContext):
         user_data = await get_user_info(message.from_user.id)
         if user_data['is_subscriber']:
             await extension_subscribe(message.from_user.id, duration)
-            await message.answer(f'Промокод {promo_code} активирован! 🔥\n'
-                             f'Ваша подписка продлена на {duration} дней.\n'
-                                 f'Нажмите /start для возврата в меню')
+            await message.answer_photo(photo=config('CONGRATS'),
+                                       caption=f'Промокод {promo_code} активирован! 🔥\n'
+                                               f'Ваша подписка продлена на {duration} дней.\n'
+                                               f'Нажмите /start для возврата в меню')
             await state.clear()
         else:
-            await message.answer(f'Промокод {promo_code} активирован! 🔥\n'
-                                 f'Вам предоставлен доступ на {duration} дней.\n'
-                                 'Нажмите на кнопку', reply_markup=get_key_kb(duration))
-            await state.set_state(Promo.get_promo_key)
+            try:
+                selected_server = await get_random_server_with_min_user_ratio()
+                server_id = selected_server['id']
+                server_api = selected_server['outline_url']
+                server_cert = selected_server['outline_cert']
+
+                await set_for_subscribe(message.from_user.id, int(duration), int(server_id))
+
+                outline_client = OutlineConnection(server_api, server_cert)
+
+                key = outline_client.create_new_key(str(message.from_user.id),
+                                                    message.from_user.username).access_url
+                await set_user_vpn_key(message.from_user.id, key)
+
+                await message.answer_photo(photo=config('CONGRATS'),
+                                           caption=f'Промокод {promo_code} активирован! 🔥\n'
+                                                   f'Вам предоставлен доступ на {duration} дней.\n\n'
+                                                   f'Ваш ключ:\n <code>{key}</code> (нажмите, чтобы скопировать)\n'
+                                                   f'\nВыберите свою платформу для скачивания приложения',
+                                           reply_markup=apps_kb())
+                await message.answer('Инструкция по настройке', reply_markup=guide_kb())
+                await state.clear()
+
+            except Exception as e:
+                await message.answer(f'Произошла непредвиденная ошибка: {e}\n'
+                                     f'Перешлите это сообщение администратору @w1nn3r1337')
 
     else:
-        await message.answer('Такого промокода не существует!\nПопробуйте ещё раз',
+        await message.answer('Такого промокода не существует!\n'
+                             'Попробуйте ещё раз',
                              reply_markup=cancel_fsm_kb())
         await state.set_state(Promo.user_promo)
 
-@start_router.callback_query(Promo.get_promo_key)
-async def generate_key_by_promo(call: CallbackQuery, state: FSMContext):
-    duration = int(call.data.split('_')[1])
-    user_data = await get_user_info(call.from_user.id)
 
-    try:
-        if user_data['is_subscriber']:
-            await extension_subscribe(call.from_user.id, duration)
-            await call.message.answer('Ваша подписка продлена!\n'
-                                      'Спасибо, что пользуетесь нашим сервисом.',
-                                      reply_markup=await main_inline_kb(call.from_user.id))
-
-        else:
-            selected_server = await get_random_server_with_min_user_ratio()
-            server_id = selected_server['id']
-            server_api = selected_server['outline_url']
-            server_cert = selected_server['outline_cert']
-
-            await set_for_subscribe(call.from_user.id, int(duration), int(server_id))
-
-            outline_client = OutlineConnection(server_api, server_cert)
-
-
-            key = outline_client.create_new_key(str(call.message.from_user.id), call.message.from_user.username).access_url
-            await set_user_vpn_key(call.from_user.id, key)
-            await call.message.answer(f'Ваш ключ:\n <code>{key}</code> (нажмите, чтобы скопировать)\n'
-                                f'\nВыберите свою платформу для скачивания приложения',
-                reply_markup=apps_kb())
-            await call.message.answer('Инструкция по настройке', reply_markup=guide_kb())
-
-        await state.clear()
-
-
-    except Exception as e:
-        print(str(e))
 
 #####################################################################################################################
 
@@ -258,6 +252,7 @@ async def get_trial(call: CallbackQuery, state: FSMContext):
                                   'А ещё мы предоставляем к нему пробный доступ на 2 дня 🤫\n\n'
                                   'Жми кнопку и подключайся!', reply_markup=get_key_kb(2))
         await state.set_state(Trial.trial_free)
+
 @start_router.callback_query(Trial.trial_free)
 async def get_trial_key(call: CallbackQuery, state: FSMContext):
     await delete_messages(call)

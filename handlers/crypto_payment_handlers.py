@@ -1,6 +1,7 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Union, Message
+from decouple import config
 
 from create_bot import bot, logger
 from database.db_servers import edit_server_active_users_count
@@ -43,10 +44,11 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await delete_messages(call)
 
-    await call.message.answer(text=MENU_TEXT.format(username=call.from_user.full_name
-                               if call.from_user.full_name
-                               else call.from_user.username),
-                               reply_markup=await main_inline_kb(call.from_user.id))
+    await call.message.answer_photo(photo=config('MAIN_MENU'),
+                                    caption=MENU_TEXT.format(username=call.from_user.full_name
+                                   if call.from_user.full_name
+                                   else call.from_user.username),
+                                   reply_markup=await main_inline_kb(call.from_user.id))
 
 #####################################################################################################################
 
@@ -109,10 +111,11 @@ async def check_payment_crypto(call: CallbackQuery, state: FSMContext):
                 await set_for_subscribe(call.from_user.id, sub_time * 31, server_id)
                 await edit_server_active_users_count(server_id, 'add')
 
-                await call.message.answer('Спасибо за покупку!\n'
-                                          f'Ваш ключ: <code>{key}</code>\n'
-                                          f'\nВыберите свою платформу для скачивания приложения',
-                                          reply_markup=apps_kb())
+                await call.message.answer_photo(photo=config('CONGRATS'),
+                                                caption='Спасибо за покупку!\n'
+                                              f'Ваш ключ: <code>{key}</code>\n'
+                                              f'\nВыберите свою платформу для скачивания приложения',
+                                              reply_markup=apps_kb())
                 await state.clear()
 
             except Exception as e:
@@ -120,12 +123,13 @@ async def check_payment_crypto(call: CallbackQuery, state: FSMContext):
 
         else:
             await extension_subscribe(call.from_user.id, sub_time * 31)
-            await call.message.answer('Спасибо за продление подписки!\n'
-                                      'Мы стараемся для Вас ❤️\n'
-                                      '\nДля возврата в меню нажмите /start')
+            await call.message.answer_photo(photo=config('CONGRATS'),
+                                            caption='Спасибо за продление подписки!\n'
+                                          'Мы стараемся для Вас ❤️\n'
+                                          '\nДля возврата в меню нажмите /start')
             await state.clear()
     else:
         await delete_messages(call)
         await call.message.answer('Платеж ещё не обнаружен.\n'
-                                  'Дождитесь завершения транзакции или свяжитесь с поддержкой',
+                                  'Дождитесь завершения транзакции и попробуйте снова или свяжитесь с поддержкой',
                                   reply_markup=payed_kb())

@@ -1,6 +1,8 @@
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, Union
+from decouple import config
+
 from create_bot import bot, logger
 from database.db_servers import edit_server_active_users_count
 from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_vpn_key, \
@@ -44,10 +46,11 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await delete_messages(call)
 
-    await call.message.answer(text=MENU_TEXT.format(username=call.from_user.full_name
-                               if call.from_user.full_name
-                               else call.from_user.username),
-                               reply_markup=await main_inline_kb(call.from_user.id))
+    await call.message.answer_photo(photo=config('MAIN_MENU'),
+                                    caption=MENU_TEXT.format(username=call.from_user.full_name
+                                   if call.from_user.full_name
+                                   else call.from_user.username),
+                                   reply_markup=await main_inline_kb(call.from_user.id))
 
 #####################################################################################################################
 
@@ -167,10 +170,11 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
                     await set_for_subscribe(call.from_user.id, sub_time * 31, server_id)
                     await edit_server_active_users_count(server_id, 'add')
 
-                    await call.message.answer('Спасибо за покупку!\n'
-                                              f'Ваш ключ: <code>{key}</code>\n'
-                                              f'\nВыберите свою платформу для скачивания приложения',
-                                              reply_markup=apps_kb())
+                    await call.message.answer_photo(photo=config('CONGRATS'),
+                                                    caption='Спасибо за покупку!\n'
+                                                  f'Ваш ключ: <code>{key}</code>\n'
+                                                  f'\nВыберите свою платформу для скачивания приложения',
+                                                  reply_markup=apps_kb())
                     await state.clear()
 
                 except Exception as e:
@@ -178,9 +182,10 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
             else:
                 await extension_subscribe(call.from_user.id, sub_time * 31)
-                await call.message.answer('Спасибо за продление подписки!\n'
-                                          'Мы стараемся для Вас ❤️\n'
-                                          '\nДля возврата в меню нажмите /start')
+                await call.message.answer_photo(photo=config('CONGRATS'),
+                                                caption='Спасибо за продление подписки!\n'
+                                              'Мы стараемся для Вас ❤️\n'
+                                              '\nДля возврата в меню нажмите /start')
                 await state.clear()
 
         else:

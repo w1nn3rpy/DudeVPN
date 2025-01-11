@@ -2,14 +2,14 @@ from datetime import datetime, timedelta
 
 
 def get_time_for_subscribe(buy_on):
-    start_time = datetime.date(datetime.now())
-    end_time = start_time + timedelta(weeks=buy_on)
+    start_time = datetime.now().date()
+    end_time = start_time + timedelta(days=buy_on)
     return start_time, end_time
 
 
 def get_time_for_test_subscribe():
-    start_time = datetime.date(datetime.now())
-    end_time = start_time + timedelta(weeks=1)
+    start_time = datetime.now().date()
+    end_time = start_time + timedelta(days=2)
     return start_time, end_time
 
 

@@ -201,15 +201,15 @@ async def check_server(call: CallbackQuery):
 
         text_to_print.append(f'<b>ID</b>: {server_id}\n<b>Страна</b>: {country_name}\n<b>IP</b>: {server_ip}\n<b>Пользователи</b>: {active_users}/{max_users}')
 
-        full_text = '\n\n'.join(text_to_print)
+    full_text = '\n\n'.join(text_to_print)
 
-        if len(full_text) < 4096:
-            await call.message.answer(full_text)
-            return
+    if len(full_text) < 4096:
+        await call.message.answer(full_text)
+        return
 
-        else:
-            for i in range(0, len(full_text), 4096):
-                await call.message.answer(full_text[i:i + 4096])
+    else:
+        for i in range(0, len(full_text), 4096):
+            await call.message.answer(full_text[i:i + 4096])
 
 
 @admin_router.callback_query(F.data == 'add_server')

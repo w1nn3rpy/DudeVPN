@@ -12,7 +12,9 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(levelname)s - %(filename)s:%(lineno)d: [%(asctime)s] - %(message)s',
     datefmt='%d-%m-%Y %H:%M:%S',
-    handlers=[logging.StreamHandler(), logging.handlers.TimedRotatingFileHandler('logs.log', when='midnight', interval=1, backupCount=7)]
+    handlers=[logging.StreamHandler(),
+              logging.handlers.TimedRotatingFileHandler('/app/logs/logs.log', when='midnight',
+                                                        interval=1, backupCount=7, encoding="utf-8")]
 )
 logger = logging.getLogger(__name__)
 

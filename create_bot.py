@@ -17,6 +17,8 @@ logging.basicConfig(
                                                         interval=1, backupCount=7, encoding="utf-8")]
 )
 logger = logging.getLogger(__name__)
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
 
 bot = Bot(token=config('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())

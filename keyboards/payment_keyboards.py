@@ -12,6 +12,7 @@ async def server_select_kb():
     if active_servers:
         for country_id, country_name in active_servers.items():
             builder.button(text=country_name, callback_data=f'{country_name}_{country_id}')
+        builder.adjust(2)
 
     builder.row(InlineKeyboardButton(text='🏠 На главную', callback_data='get_home'))
 

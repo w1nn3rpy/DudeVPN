@@ -20,6 +20,7 @@ def start_scheduler():
 
 async def main():
     await create_table_if_not_exist()
+    await check_end_subscribe()
     start_scheduler()
     dp.include_router(admin_router)
     dp.include_router(start_router)

@@ -164,9 +164,9 @@ async def promo_handler(message: Message, state: FSMContext):
     await delete_messages(message)
 
     check_promo_in_db = await pop_promo(promo_code)
-    duration = check_promo_in_db['duration']
 
     if check_promo_in_db:
+        duration = check_promo_in_db['duration']
         user_data = await get_user_info(message.from_user.id)
         if user_data['is_subscriber']:
             await extension_subscribe(message.from_user.id, duration)
@@ -178,7 +178,7 @@ async def promo_handler(message: Message, state: FSMContext):
         else:
             try:
                 selected_server = await get_random_server_with_min_user_ratio()
-                server_id = selected_server['id']
+                server_id = selected_server['server_id']
                 server_api = selected_server['outline_url']
                 server_cert = selected_server['outline_cert']
 
@@ -188,6 +188,7 @@ async def promo_handler(message: Message, state: FSMContext):
 
                 key = outline_client.create_new_key(str(message.from_user.id),
                                                     message.from_user.username).access_url
+                await edit_server_active_users_count(server_id, 'add')
                 await set_user_vpn_key(message.from_user.id, key)
 
                 await message.answer_photo(photo=config('CONGRATS'),

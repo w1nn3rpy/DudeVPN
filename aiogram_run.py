@@ -14,7 +14,7 @@ from handlers.stars_payment_handlers import stars_payment_router
 
 def start_scheduler():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_end_subscribe, CronTrigger(hour=10))
+    scheduler.add_job(check_end_subscribe, CronTrigger(hour=10), misfire_grace_time=180)
     scheduler.start()
 
 

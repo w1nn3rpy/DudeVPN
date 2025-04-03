@@ -26,11 +26,10 @@ async def set_commands():
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 async def create_user_if_not_exist(event):
-    if isinstance(event, Message):
-        if not await get_user_info(event.from_user.id):
-            await new_user(user_id=event.from_user.id, username=event.from_user.username)
-            referral_link = await create_start_link(bot, str(event.from_user.id), encode=True)
-
+    if not await get_user_info(event.from_user.id):
+        await new_user(user_id=event.from_user.id, username=event.from_user.username)
+        referral_link = await create_start_link(bot, str(event.from_user.id), encode=True)
+        if isinstance(event, Message):
             if len(event.text.split()) > 1:
                 referrer = event.text.split()[1]
                 referrer_id = int(decode_payload(referrer)) if referrer else None
@@ -46,18 +45,14 @@ async def create_user_if_not_exist(event):
                     await event.answer('Вы указали свой ID в качестве пригласившего.\n'
                                          'Ай-ай-ай, нельзя так ☺️')
 
-            else:
-                await new_user_in_referral_system(event.from_user.id, referral_link)
+        await new_user_in_referral_system(event.from_user.id, referral_link)
 
-        else:
-            user_data = await get_user_info(event.from_user.id)
-            name = user_data['name']
-            if name != event.from_user.username:
-                await update_username(event.from_user.id, event.from_user.username)
 
     else:
-        await event.message.answer('Ошибка! Нажмите /start')
-        return False
+        user_data = await get_user_info(event.from_user.id)
+        name = user_data['name']
+        if name != event.from_user.username:
+            await update_username(event.from_user.id, event.from_user.username)
 
 
 async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):

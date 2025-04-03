@@ -82,11 +82,11 @@ async def get_email_handler(event: Message | CallbackQuery, state: FSMContext):
     if 0 < referral_balance < data['price']:
         price = data['price'] - referral_balance
         new_referral_balance = 0
-        await state.update_data(new_ref=True, new_referral_balance=new_referral_balance)
+        await state.update_data(new_ref=True, new_referral_balance=new_referral_balance, price=price)
     elif 0 < referral_balance > data['price']:
         price = 1
         new_referral_balance = referral_balance - data['price']
-        await state.update_data(new_ref=True, new_referral_balance=new_referral_balance)
+        await state.update_data(new_ref=True, new_referral_balance=new_referral_balance, price=price)
     else:
         price = data['price']
         await state.update_data(new_ref=False)

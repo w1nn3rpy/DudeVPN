@@ -339,6 +339,8 @@ async def check_end_subscribe():
             await set_for_unsubscribe(user_id)
             await edit_server_active_users_count(server_id, 'sub')
 
+            #TODO пофиксить убавление юзеров на сервере
+
             try:
                 await bot.send_message(user_id, '‼️Уважаемый пользователь‼️\nВаша подписка закончилась.\n'
                                                 'VPN ключ деактивирован.\n'

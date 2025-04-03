@@ -77,4 +77,6 @@ def get_key_kb(time_subscribe):
     inline_kb = [
         [InlineKeyboardButton(text='🚀 Получить ключ', callback_data=f'get-key_{time_subscribe}')]
     ]
+    if time_subscribe == 2:
+        inline_kb.append([InlineKeyboardButton(text='❌ Вернуться в меню', callback_data='cancel_fsm')])
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

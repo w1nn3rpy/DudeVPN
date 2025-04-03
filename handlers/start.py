@@ -25,6 +25,41 @@ async def set_commands():
                 BotCommand(command='help', description='Помощь')]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
+async def create_user_if_not_exist(event):
+    if isinstance(event, Message):
+        if not await get_user_info(event.from_user.id):
+            await new_user(user_id=event.from_user.id, username=event.from_user.username)
+            referral_link = await create_start_link(bot, str(event.from_user.id), encode=True)
+
+            if len(event.text.split()) > 1:
+                referrer = event.text.split()[1]
+                referrer_id = int(decode_payload(referrer)) if referrer else None
+
+                if referrer_id != event.from_user.id:
+                    await new_user_in_referral_system(event.from_user.id, referral_link, referrer_id)
+                    await benefit_for_referral(referrer_id, event.from_user.id)
+                    await bot.send_message(chat_id=referrer_id, text='По вашей ссылке присоединился новый пользователь, '
+                                                                     'вам начислено 50 рублей\n'
+                                                                     'Спасибо, что рассказываете про наш сервис ❤️')
+                else:
+                    await new_user_in_referral_system(event.from_user.id, referral_link)
+                    await event.answer('Вы указали свой ID в качестве пригласившего.\n'
+                                         'Ай-ай-ай, нельзя так ☺️')
+
+            else:
+                await new_user_in_referral_system(event.from_user.id, referral_link)
+
+        else:
+            user_data = await get_user_info(event.from_user.id)
+            name = user_data['name']
+            if name != event.from_user.username:
+                await update_username(event.from_user.id, event.from_user.username)
+
+    else:
+        await event.message.answer('Ошибка! Нажмите /start')
+        return False
+
+
 async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):
     try:
         chat_id = event.from_user.id
@@ -50,6 +85,8 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
 
 @start_router.callback_query(F.data == 'get_home')
 async def get_homepage_handler(call: CallbackQuery, state: FSMContext):
+    await create_user_if_not_exist(call)
+
     current_state = await state.get_data()
     if current_state is not None:
         await state.clear()
@@ -67,32 +104,7 @@ async def cmd_start(message: Message, state: FSMContext):
     if current_state is not None:
         await state.clear()
 
-    if not await get_user_info(message.from_user.id):
-        await new_user(user_id=message.from_user.id, username=message.from_user.username)
-        referral_link = await create_start_link(bot, str(message.from_user.id), encode=True)
-
-        if len(message.text.split()) > 1:
-            referrer = message.text.split()[1]
-            referrer_id = int(decode_payload(referrer)) if referrer else None
-
-            if referrer_id != message.from_user.id:
-                await new_user_in_referral_system(message.from_user.id, referral_link, referrer_id)
-                await benefit_for_referral(referrer_id, message.from_user.id)
-                await bot.send_message(chat_id=referrer_id, text='По вашей ссылке присоединился новый пользователь, '
-                                                                 'вам начислено 35 рублей\n'
-                                                                 'Спасибо, что рассказываете про наш сервис ❤️')
-            else:
-                await new_user_in_referral_system(message.from_user.id, referral_link)
-                await message.answer('Вы указали свой ID в качестве пригласившего.\n'
-                                     'Ай-ай-ай, нельзя так ☺️')
-
-        else:
-            await new_user_in_referral_system(message.from_user.id, referral_link)
-    else:
-        user_data = await get_user_info(message.from_user.id)
-        name = user_data['name']
-        if name != message.from_user.username:
-            await update_username(message.from_user.id, message.from_user.username)
+    await create_user_if_not_exist(message)
 
     await message.answer_photo(photo=config('MAIN_MENU'),
                                 caption=MENU_TEXT.format(username=message.from_user.full_name
@@ -108,6 +120,8 @@ async def about_handler(event: Message|CallbackQuery, state: FSMContext):
     if current_state is not None:
         await state.clear()
 
+    await create_user_if_not_exist(event)
+
     await delete_messages(event)
     await state.set_state(Help.help_main)
     await bot.send_photo(photo=config('ABOUT'),
@@ -118,6 +132,9 @@ async def about_handler(event: Message|CallbackQuery, state: FSMContext):
 @start_router.callback_query(F.data == 'profile')
 async def profile(call: CallbackQuery):
     await delete_messages(call)
+
+    await create_user_if_not_exist(call)
+
     user_data = await get_user_info(call.from_user.id)
     user_ref_data = await get_user_referral_system_by_id(call.from_user.id)
     user_id = call.from_user.id
@@ -152,6 +169,8 @@ async def profile(call: CallbackQuery):
 
 @start_router.callback_query(F.data == 'promo')
 async def promo_handler(call: CallbackQuery, state: FSMContext):
+    await create_user_if_not_exist(call)
+
     await delete_messages(call)
     await state.set_state(Promo.user_promo)
     await call.message.answer_photo(photo=config('PROMO'),
@@ -218,6 +237,8 @@ async def promo_handler(message: Message, state: FSMContext):
 
 @start_router.callback_query(F.data == 'referral_system')
 async def referral_handler(call: CallbackQuery):
+    await create_user_if_not_exist(call)
+
     await delete_messages(call)
     ref_user_data = await get_user_referral_system_by_id(call.from_user.id)
     try:
@@ -243,6 +264,8 @@ async def referral_handler(call: CallbackQuery):
 
 @start_router.callback_query(F.data == 'trial')
 async def get_trial(call: CallbackQuery, state: FSMContext):
+    await create_user_if_not_exist(call)
+
     await delete_messages(call)
     user_data = await get_user_info(call.from_user.id)
 

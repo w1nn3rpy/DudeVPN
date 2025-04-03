@@ -8,6 +8,7 @@ from create_bot import bot, logger
 from database.db_admin import get_country_by_id
 from database.db_servers import get_server_by_id, get_server_with_min_user_ratio_by_country
 from database.db_users import get_user_info
+from handlers.start import create_user_if_not_exist
 from states.payment_states import Buy
 from keyboards.inline_kbs import main_inline_kb
 from keyboards.payment_keyboards import server_select_kb, select_time_kb, select_payment_system_kb, skip_email_kb, \
@@ -46,6 +47,8 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
 @payment_router.callback_query(F.data == 'buy')
 @payment_router.message(Command('buy'))
 async def server_select_handler(event: Message | CallbackQuery, state: FSMContext):
+    await create_user_if_not_exist(event)
+
     current_state = await state.get_data()
     if current_state is not None:
         await state.clear()

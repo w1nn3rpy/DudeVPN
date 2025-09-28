@@ -5,12 +5,15 @@ from database.db_servers import get_locations_of_active_servers
 from lingo.template import SUBSCRIPTION_OPTIONS
 
 
-async def server_select_kb():
+async def server_select_kb(skip_id:int = None):
     active_servers = await get_locations_of_active_servers()
     builder =  InlineKeyboardBuilder()
 
     if active_servers:
         for country_id, country_name in active_servers.items():
+            if int(country_id) == int(skip_id):
+                continue
+
             builder.button(text=country_name, callback_data=f'{country_name}_{country_id}')
         builder.adjust(2)
 
@@ -35,7 +38,6 @@ def select_payment_system_kb():
         [InlineKeyboardButton(text='T-Pay', callback_data='tinkoff_bank')],
         [InlineKeyboardButton(text='Оплата картой', callback_data='bank_card')],
         [InlineKeyboardButton(text='Оплата TG Stars 🌟', callback_data='stars')],
-        [InlineKeyboardButton(text='Оплата криптой', callback_data='crypto_payment')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_systems)
@@ -77,6 +79,6 @@ def get_key_kb(time_subscribe):
     inline_kb = [
         [InlineKeyboardButton(text='🚀 Получить ключ', callback_data=f'get-key_{time_subscribe}')]
     ]
-    if time_subscribe == 2:
+    if time_subscribe == 2 or time_subscribe == 15:
         inline_kb.append([InlineKeyboardButton(text='❌ Вернуться в меню', callback_data='cancel_fsm')])
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

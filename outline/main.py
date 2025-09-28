@@ -51,4 +51,7 @@ class OutlineConnection:
         """
         Удаляет ключ
         """
-        self.client.delete_key(key_id=key_id)
+        try:
+            self.client.delete_key(key_id=key_id)
+        except Exception as e:
+            print(f'Ошибка в {__name__}: {e}')

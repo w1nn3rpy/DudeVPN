@@ -127,3 +127,22 @@ async def get_server_by_id(server_id):
         if con:
             await con.close()
 
+async def check_server_not_full(server_id):
+    con = None
+    try:
+        con = await asyncpg.connect(DB_URL)
+        query = '''
+        SELECT active_users, max_users
+        FROM servers
+        WHERE server_id = $1'''
+
+        result = await con.fetch(query, server_id)
+
+        return result
+
+    except Exception as e:
+        logger.error(f'Ошибка в {__name__}: {e}')
+
+    finally:
+        if con:
+            await con.close()

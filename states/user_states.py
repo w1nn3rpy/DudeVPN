@@ -9,3 +9,7 @@ class Trial(StatesGroup):
 class Promo(StatesGroup):
     user_promo = State()
     get_promo_key = State()
+
+class Server(StatesGroup):
+    select_new_country = State()
+    change_server = State()

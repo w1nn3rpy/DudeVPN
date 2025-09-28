@@ -37,6 +37,15 @@ def profile_kb():
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_profile)
 
+def profile_sub_kb():
+    inline_kb_sub_profile = [
+        [InlineKeyboardButton(text='🔄 Сменить сервер', callback_data='change_server')],
+        [InlineKeyboardButton(text='🔍 В каталог', callback_data='buy')],
+        [InlineKeyboardButton(text='👥 Реферальная программа', callback_data='referral_system')],
+        [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_sub_profile)
+
 def referral_kb():
     inline_kb = [
         [InlineKeyboardButton(text='❓ Вопросы и ответы', url='https://telegra.ph/Nastrojka-VPN-08-03')],

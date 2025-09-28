@@ -26,16 +26,56 @@ async def new_user(user_id,
         if con:
             await con.close()
 
-async def new_user_in_referral_system(user_id: int, referral_link, invited_by_id: int = None):
+async def new_user_in_referral_system(user_id: int, referral_link, invited_by_id: int = None, got_from_adv: bool = False):
     con = None
 
     try:
         con = await asyncpg.connect(DB_URL)
         query = '''
-        INSERT INTO referral_system (user_id, referral_link, invited_by_id)
-        VALUES ($1, $2, $3)'''
+        INSERT INTO referral_system (user_id, referral_link, invited_by_id, got_from_adv)
+        VALUES ($1, $2, $3, $4)'''
 
-        await con.execute(query, user_id, referral_link, invited_by_id)
+        await con.execute(query, user_id, referral_link, invited_by_id, got_from_adv)
+
+    except Exception as e:
+        logger.error(f'Ошибка в {__name__}: {e}')
+
+    finally:
+        if con:
+            await con.close()
+
+async def check_to_advertiser(referrer_id):
+    con = None
+
+    try:
+        con = await asyncpg.connect(DB_URL)
+        query = '''
+        SELECT is_advertiser FROM referral_system
+        WHERE user_id = $1'''
+
+        result = await con.fetchval(query, referrer_id)
+
+        return result
+
+    except Exception as e:
+        logger.error(f'Ошибка в {__name__}: {e}')
+
+    finally:
+        if con:
+            await con.close()
+
+async def check_got_by_adv(user_id):
+    con = None
+
+    try:
+        con = await asyncpg.connect(DB_URL)
+        query = '''
+        SELECT got_from_adv FROM referral_system
+        WHERE user_id = $1'''
+
+        result = await con.fetchval(query, user_id)
+
+        return result
 
     except Exception as e:
         logger.error(f'Ошибка в {__name__}: {e}')
@@ -202,9 +242,9 @@ async def set_for_subscribe(user_id, buy_on, server_id):
             await con.close()
 
 
-async def set_for_trial_subscribe(user_id, server_id):
+async def set_for_trial_subscribe(user_id, server_id, on_time):
 
-    start_time, end_time = get_time_for_test_subscribe()
+    start_time, end_time = get_time_for_test_subscribe(on_time)
     con = None
 
     try:
@@ -251,17 +291,18 @@ async def set_for_unsubscribe(user_id):
             await con.close()
 
 
-async def set_user_vpn_key(user_id, key: str):
+async def set_user_vpn_key(user_id, key: str, server_id):
     con = None
     try:
         con = await asyncpg.connect(DB_URL)
         query = '''
         UPDATE users 
-        SET vpn_key = $1 
+        SET vpn_key = $1,
+        server_id = $3
         WHERE user_id = $2
         '''
 
-        await con.execute(query, key, user_id)
+        await con.execute(query, key, user_id, server_id)
 
     except Exception as e:
         logger.error(f'Ошибка в {__name__}: {e}')

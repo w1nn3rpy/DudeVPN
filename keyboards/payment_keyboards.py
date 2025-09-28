@@ -11,8 +11,9 @@ async def server_select_kb(skip_id:int = None):
 
     if active_servers:
         for country_id, country_name in active_servers.items():
-            if int(country_id) == int(skip_id):
-                continue
+            if skip_id:
+                if int(country_id) == int(skip_id):
+                    continue
 
             builder.button(text=country_name, callback_data=f'{country_name}_{country_id}')
         builder.adjust(2)

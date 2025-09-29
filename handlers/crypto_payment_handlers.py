@@ -107,7 +107,7 @@ async def check_payment_crypto(call: CallbackQuery, state: FSMContext):
                                             call.from_user.username if call.from_user.username else str(
                                                 call.from_user.id)).access_url
 
-                await set_user_vpn_key(call.from_user.id, key)
+                await set_user_vpn_key(call.from_user.id, key, server_id)
                 await set_for_subscribe(call.from_user.id, sub_time * 31, server_id)
                 await edit_server_active_users_count(server_id, 'add')
 

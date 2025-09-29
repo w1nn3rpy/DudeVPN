@@ -170,7 +170,7 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
                     client = OutlineConnection(server_api, server_cert)
                     key = client.create_new_key(str(call.from_user.id), call.from_user.username if call.from_user.username else str(call.from_user.id)).access_url
 
-                    await set_user_vpn_key(call.from_user.id, key)
+                    await set_user_vpn_key(call.from_user.id, key, server_id)
                     await set_for_subscribe(call.from_user.id, sub_time * 31, server_id)
                     await edit_server_active_users_count(server_id, 'add')
 

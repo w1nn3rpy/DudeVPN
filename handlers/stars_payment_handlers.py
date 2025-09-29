@@ -83,7 +83,7 @@ async def successful_payment_handler(message: Message, state: FSMContext):
                 key = client.create_new_key(str(user_id),
                                             message.from_user.username if message.from_user.username else str(
                                                 user_id)).access_url
-                await set_user_vpn_key(user_id, key)
+                await set_user_vpn_key(user_id, key, server_id)
                 await set_for_subscribe(user_id, int(duration) * 31, server_id)
                 await edit_server_active_users_count(server_id, 'add')
 

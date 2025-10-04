@@ -136,8 +136,7 @@ async def check_server_not_full(server_id):
         FROM servers
         WHERE server_id = $1'''
 
-        result = await con.fetch(query, server_id)
-        print(f'result of "check_server_not_full": {result}')
+        result = await con.fetchrow(query, server_id)
 
         return result
 

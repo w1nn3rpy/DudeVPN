@@ -312,7 +312,13 @@ async def execute_server(call: CallbackQuery, state: FSMContext):
         if output:
             try:
                 all_output, api_url, cert_sha256, management_port, access_key_port = get_data_from_output(output)
-                await add_server(country_id, ip, password, api_url, cert_sha256, True,
+                logger.info(f'get_data_from_output (admin_handlers, 315):\n'
+                            f'{all_output}\n'
+                            f'{api_url}\n'
+                            f'{cert_sha256}\n'
+                            f'{management_port}\n'
+                            f'{access_key_port}')
+                await add_server(country_id, ip, password, api_url, cert_sha256, True, 0,
                                  max_users, access_key_port, management_port)
 
                 await call.message.answer('Функция отработала.\n'

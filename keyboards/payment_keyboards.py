@@ -71,7 +71,7 @@ def payed_kb():
         [InlineKeyboardButton(text='✅ Оплатил(-а)',
                               callback_data=f'payed')],
         [InlineKeyboardButton(text='❌ Передумал(-а) оплачивать', callback_data='cancel_fsm')],
-        [InlineKeyboardButton(text='🆘 Сообщить о проблеме', url='tg://resolve?domain=w1nn3r1337')],
+        [InlineKeyboardButton(text='🆘 Сообщить о проблеме', url='tg://resolve?domain=dudevpn_supportbot')],
 
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

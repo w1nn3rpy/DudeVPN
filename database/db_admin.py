@@ -89,16 +89,16 @@ async def get_country_by_code(code):
         if con:
             await con.close()
 
-async def add_server(country_id, server_ip, server_password, outline_url, outline_cert, is_active, max_users, vless_port, manager_port):
+async def add_server(country_id, server_ip, server_password, outline_url, outline_cert, is_active, active_users, max_users, vless_port, manager_port):
     con = None
     try:
         con = await asyncpg.connect(DB_URL)
         query = '''
         INSERT INTO servers (country_id, server_ip, server_password, outline_url, 
-        outline_cert, is_active, max_users, vless_port, manager_port)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)'''
+        outline_cert, is_active, active_users, max_users, vless_port, manager_port)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)'''
         await con.execute(query,country_id, server_ip, server_password,
-                          outline_url, outline_cert, is_active, max_users, vless_port, manager_port)
+                          outline_url, outline_cert, is_active, active_users, max_users, vless_port, manager_port)
 
     except Exception as e:
         logger.error(f'Ошибка в {__name__}: {e}')

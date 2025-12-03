@@ -23,7 +23,7 @@ def about_kb():
     button = [
         [InlineKeyboardButton(text='📜 Новости и конкурсы 🎉', url='tg://resolve?domain=Dude_VPN')],
         [InlineKeyboardButton(text="🚀 Купить VPN", callback_data='buy')],
-        [InlineKeyboardButton(text='🆘 Техподдержка', url='tg://resolve?domain=w1nn3r1337')],
+        [InlineKeyboardButton(text='🆘 Техподдержка', url='tg://resolve?domain=DudeVPN_supportbot')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=button)

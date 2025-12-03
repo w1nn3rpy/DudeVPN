@@ -9,7 +9,7 @@ async def main_inline_kb(user_id):
     trial_used = user_info['trial_used']
     kb_list = [
             [InlineKeyboardButton(text=f'{"🚀 Купить VPN" if not is_subscriber else "🚀 Продлить VPN"}', callback_data='buy')],
-            [InlineKeyboardButton(text='✌️ О нашем VPN', callback_data='about'), InlineKeyboardButton(text='🆘 Техподдержка', url='tg://resolve?domain=w1nn3r1337')],
+            [InlineKeyboardButton(text='✌️ О нашем VPN', callback_data='about'), InlineKeyboardButton(text='🆘 Техподдержка', url='tg://resolve?domain=dudevpn_supportbot')],
             [InlineKeyboardButton(text="🔥 Ввести промокод", callback_data='promo'), InlineKeyboardButton(text='👑 Профиль', callback_data='profile')]
     ]
     if not trial_used: kb_list.insert(0, [InlineKeyboardButton(text='🚀 Попробовать бесплатно', callback_data='trial')])

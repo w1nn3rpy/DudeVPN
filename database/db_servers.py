@@ -46,10 +46,10 @@ async def get_random_server_with_min_user_ratio():
     try:
         con = await asyncpg.connect(DB_URL)
         query = '''
-        SELECT server_id, outline_url, outline_cert, active_users, max_users,
+        SELECT server_id, outline_url, outline_cert, is_active, active_users, max_users,
         (CAST(active_users AS FLOAT) / max_users) AS user_ratio
         FROM servers
-        WHERE max_users > 0
+        WHERE max_users > 0 AND is_active = TRUE
         ORDER BY user_ratio ASC
         LIMIT 1;
         '''

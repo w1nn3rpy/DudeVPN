@@ -12,12 +12,13 @@ from lingo.template import MENU_TEXT
 from outline.main import OutlineConnection
 from states.payment_states import Buy
 from keyboards.payment_keyboards import stars_payment_keyboard
+from create_bot import bot
 
 PRICE_DICT = { ### {месяцев подписки: цена в stars} ###
-    1: 124,
-    3: 349,
-    6: 674,
-    12: 1269
+    1: 160,
+    3: 420,
+    6: 800,
+    12: 1500
 }
 
 ### Выставление счёта на оплату ###
@@ -72,6 +73,8 @@ async def successful_payment_handler(message: Message, state: FSMContext):
         user_id = message.from_user.id
         data = await state.get_data()
         duration = data['sub_time']
+        await bot.send_message(chat_id=5983514379,
+                               text='Поступила оплата в TG Stars')
 
         if is_subscriber is False:
             try:

@@ -124,9 +124,16 @@ async def confirm_payment_handler(call: CallbackQuery, state: FSMContext):
     payment_method = call.data
     data = await state.get_data()
 
+    PRICE_DICT = {  ### {месяцев подписки: цена в stars} ###
+        1: 160,
+        3: 420,
+        6: 800,
+        12: 1500
+    }
+
     country_name = data['country_name']
     sub_time = data['sub_time']
-    price = data['price']
+    price = PRICE_DICT[sub_time]
     await state.update_data(payment_method=payment_method)
     if payment_method in ['sbp', 'tinkoff_bank', 'sberbank', 'bank_card']:
         await state.set_state(Buy.get_email_for_check)
@@ -140,7 +147,7 @@ async def confirm_payment_handler(call: CallbackQuery, state: FSMContext):
                                    f'Страна: <b>{country_name}</b>\n'
                                    f'Длительность: <b>{sub_time} мес.</b>\n'
                                    f'Метод оплаты: <b>Telegram Stars</b>\n'
-                                   f'\nК оплате: {int(price) // 2} {'⭐️'} \n',
+                                   f'\nК оплате: {int(price)} {'⭐️'} \n',
                                    reply_markup=accept_or_not_kb())
     elif payment_method == 'crypto_payment':
         await state.set_state(Buy.confirm_payment_crypto)

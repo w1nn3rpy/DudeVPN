@@ -204,7 +204,7 @@ async def check_server(call: CallbackQuery):
     full_text = '\n\n'.join(text_to_print)
 
     if len(full_text) < 4096:
-        await call.message.answer(full_text)
+        await call.message.answer(full_text, reply_markup=check_server_again_kb())
         return
 
     else:

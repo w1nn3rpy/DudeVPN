@@ -6,7 +6,7 @@ async def get_all_servers():
     con = None
     try:
         con = await asyncpg.connect(DB_URL)
-        servers = await con.fetch('SELECT * FROM servers')
+        servers = await con.fetch('SELECT * FROM servers ORDER BY server_id')
         return servers
 
     except Exception as e:

@@ -9,7 +9,7 @@ from create_bot import bot, logger
 from database.db_servers import get_all_servers
 from keyboards.inline_kbs import cancel_fsm_kb, main_inline_kb
 from keyboards.admin_keyboards import admin_actions_kb, target_for_spam_kb, add_del_promo_kb, select_server_location_kb, \
-    add_server_kb
+    add_server_kb, check_server_again_kb
 from database.db_admin import add_promo, del_promo, get_all_users, get_all_subscribers, get_country_by_id, \
     get_countries, get_country_by_code, add_server
 from lingo.template import MENU_TEXT
@@ -209,7 +209,7 @@ async def check_server(call: CallbackQuery):
 
     else:
         for i in range(0, len(full_text), 4096):
-            await call.message.answer(full_text[i:i + 4096])
+            await call.message.answer(full_text[i:i + 4096], reply_markup=check_server_again_kb())
 
 
 @admin_router.callback_query(F.data == 'add_server')

@@ -1,6 +1,8 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+def check_server_again_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Проверить ещё раз', callback_data='check_server')]])
 
 def admin_actions_kb():
     inline_kb = [

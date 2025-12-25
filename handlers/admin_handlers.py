@@ -204,8 +204,13 @@ async def check_server(call: CallbackQuery):
     full_text = '\n\n'.join(text_to_print)
 
     if len(full_text) < 4096:
-        await call.message.answer(full_text, reply_markup=check_server_again_kb())
-        return
+        try:
+            await call.message.edit_text(full_text, reply_markup=check_server_again_kb())
+            return
+        except Exception as e:
+            await delete_messages(call)
+            await call.message.answer(full_text, reply_markup=check_server_again_kb())
+
 
     else:
         for i in range(0, len(full_text), 4096):

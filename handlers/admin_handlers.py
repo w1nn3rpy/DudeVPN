@@ -207,6 +207,7 @@ async def check_server(call: CallbackQuery):
             await call.message.edit_text(full_text, reply_markup=check_server_again_kb())
             return
         except Exception as e:
+            logger.error(f'Ошибка в check_server: {e}')
             await delete_messages(call)
             await call.message.answer(full_text, reply_markup=check_server_again_kb())
 

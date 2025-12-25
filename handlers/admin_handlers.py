@@ -181,7 +181,6 @@ async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
 
 @admin_router.callback_query(F.data == 'check_server')
 async def check_server(call: CallbackQuery):
-    await delete_messages(call)
     servers = await get_all_servers()
 
     if not servers:

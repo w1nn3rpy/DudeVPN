@@ -150,7 +150,7 @@ async def add_days_sub_handler(message: Message, state:FSMContext):
     user_id = int(message.text.split()[0])
     days_int = int(message.text.split()[1])
     await state.update_data(user_id=user_id, days=days_int)
-
+    await delete_messages(message, 2)
     if user_id == 0:
         await state.update_data(days=None)
         await message.answer(f'Вы хотите прибавить {days_int} дней ВСЕМ пользователям с активной подпиской?',
@@ -175,6 +175,7 @@ async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
         user_id = data.get('user_id')
         days = data.get('days')
         result = await extend_subscription(days, user_id)
+        await delete_messages(call)
         await call.message.answer(f'Функция отработала.\n'
                                   f'Обновлено строк: {result}', reply_markup=await main_inline_kb(call.from_user.id))
         await state.clear()

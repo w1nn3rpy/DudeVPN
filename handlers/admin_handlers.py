@@ -152,7 +152,7 @@ async def add_days_sub_handler(message: Message, state:FSMContext):
     await state.update_data(user_id=user_id, days=days_int)
     await delete_messages(message, 2)
     if user_id == 0:
-        await state.update_data(days=None)
+        await state.update_data(user_id=None)
         await message.answer(f'Вы хотите прибавить {days_int} дней ВСЕМ пользователям с активной подпиской?',
                              reply_markup=add_days_sub_kb())
 

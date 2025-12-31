@@ -117,20 +117,18 @@ async def extend_subscription(days: int, user_id: int | None = None):
         if user_id is None:
             query = """
                 UPDATE users
-                SET end_subscribe = end_subscribe + ($1 || ' days')::interval
+                SET end_subscribe = end_subscribe + ($1::int * INTERVAL '1 day')
                 WHERE is_subscriber = TRUE
             """
-            result = await con.execute(query, days)
-            return result  # например: 'UPDATE 42'
+            return await con.execute(query, days)
 
         else:
             query = """
                 UPDATE users
-                SET end_subscribe = end_subscribe + ($1 || ' days')::interval
+                SET end_subscribe = end_subscribe + ($1::int * INTERVAL '1 day')
                 WHERE user_id = $2
             """
-            result = await con.execute(query, days, user_id)
-            return result
+            return await con.execute(query, days, user_id)
 
     except Exception as e:
         logger.error(f'Ошибка в {__name__}: {e}')

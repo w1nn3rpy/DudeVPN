@@ -7,14 +7,15 @@ from aiogram.fsm.state import State, StatesGroup
 
 from create_bot import bot, logger
 from database.db_servers import get_all_servers
+from database.db_users import get_user_info
 from keyboards.inline_kbs import cancel_fsm_kb, main_inline_kb
 from keyboards.admin_keyboards import admin_actions_kb, target_for_spam_kb, add_del_promo_kb, select_server_location_kb, \
-    add_server_kb, check_server_again_kb
+    add_server_kb, check_server_again_kb, add_days_sub_kb
 from database.db_admin import add_promo, del_promo, get_all_users, get_all_subscribers, get_country_by_id, \
-    get_countries, get_country_by_code, add_server
+    get_countries, get_country_by_code, add_server, extend_subscription
 from lingo.template import MENU_TEXT
 from utils.ssh_utils import execute_outline_server, get_data_from_output
-from states.admin_states import Promo, SpamState, ServerActions
+from states.admin_states import Promo, SpamState, ServerActions, SubActions
 
 admin_router = Router()
 
@@ -130,11 +131,58 @@ async def spam_handler(call: CallbackQuery, state: FSMContext):
                               reply_markup=await main_inline_kb(call.from_user.id))
 
     await state.clear()
+#####################################################################################################################
+
+######################################## Блок управления подпиской ##################################################
+
+@admin_router.callback_query(F.data == 'add_days_sub')
+async def add_days_sub(call: CallbackQuery, state:FSMContext):
+    await delete_messages(call)
+    await call.message.answer('⬇️ Введите user_id и кол-во дней ⬇️\n'
+                              'Пример: "13371337 31" если хотите прибавить этому пользователю месяц подписки\n'
+                              'Или в параметр user_id передайте 0, чтобы прибавить указанное кол-во дней всем '
+                              'пользователям с активной подпиской\n'
+                              'Пример: "0 31', reply_markup=cancel_fsm_kb())
+    await state.set_state(SubActions.GET_DATA)
+
+@admin_router.message(SubActions.GET_DATA)
+async def add_days_sub_handler(message: Message, state:FSMContext):
+    user_id = int(message.text.split()[0])
+    days_int = int(message.text.split()[1])
+    await state.update_data(user_id=user_id, days=days_int)
+
+    if user_id == 0:
+        await state.update_data(days=None)
+        await message.answer(f'Вы хотите прибавить {days_int} дней ВСЕМ пользователям с активной подпиской?',
+                             reply_markup=add_days_sub_kb())
+
+    else:
+        user_data = await get_user_info(user_id)
+        if user_data['is_subscriber']:
+            await message.answer(f'Вы хотите прибавить {days_int} дней {user_id} пользователю?',
+                                 reply_markup=add_days_sub_kb())
+        else:
+            await message.answer('У пользователя сейчас нет активной подписки', reply_markup=await main_inline_kb(message.from_user.id))
+            await state.clear()
+            return
+
+    await state.set_state(SubActions.ADD_DAYS)
+
+@admin_router.callback_query(SubActions.ADD_DAYS)
+async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
+    if call.data == 'confirm_add_days':
+        data = await state.get_data()
+        user_id = data.get('user_id')
+        days = data.get('days')
+        result = await extend_subscription(days, user_id)
+        await call.message.answer(f'Функция отработала.\n'
+                                  f'Обновлено строк: {result}', reply_markup=await main_inline_kb(call.from_user.id))
+        await state.clear()
 
 
 #####################################################################################################################
 
-################################################ Блок промо #######################################################
+################################################ Блок промо #########################################################
 
 @admin_router.callback_query(F.data == 'add_del_promo_next_step')
 async def add_del_promo(call: CallbackQuery, state: FSMContext):

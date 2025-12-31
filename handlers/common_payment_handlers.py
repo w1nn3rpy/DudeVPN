@@ -132,8 +132,17 @@ async def confirm_payment_handler(call: CallbackQuery, state: FSMContext):
     }
 
     country_name = data['country_name']
-    sub_time = data['sub_time']
-    price = PRICE_DICT[sub_time]
+    try:
+        sub_time = data['sub_time']
+        price = PRICE_DICT[sub_time]
+
+    except KeyError as e:
+        logger.error(f'Ошибка в {__name__}: {str(e)}\n'
+                     f'Содержимое data: {data}')
+        await call.message.answer(f'Произошла непредвиденная ошибка.\n'
+                                  f'Попробуйте снова', reply_markup=await main_inline_kb(call.from_user.id))
+        await state.clear()
+
     await state.update_data(payment_method=payment_method)
     if payment_method in ['sbp', 'tinkoff_bank', 'sberbank', 'bank_card']:
         await state.set_state(Buy.get_email_for_check)

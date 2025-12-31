@@ -1,6 +1,8 @@
 import asyncpg
 from database.models import DB_URL
 from create_bot import logger
+from work_time.time_func import get_time_for_subscribe
+
 
 async def add_promo(promo_code: str, duration: int):
     con = await asyncpg.connect(DB_URL)
@@ -106,3 +108,32 @@ async def add_server(country_id, server_ip, server_password, outline_url, outlin
     finally:
         if con:
             await con.close()
+
+
+async def extend_subscription(days: int, user_id: int | None = None):
+    con = await asyncpg.connect(DB_URL)
+
+    try:
+        if user_id is None:
+            query = """
+                UPDATE users
+                SET end_subscribe = end_subscribe + ($1 || ' days')::interval
+                WHERE is_subscriber = TRUE
+            """
+            result = await con.execute(query, days)
+            return result  # например: 'UPDATE 42'
+
+        else:
+            query = """
+                UPDATE users
+                SET end_subscribe = end_subscribe + ($1 || ' days')::interval
+                WHERE user_id = $2
+            """
+            result = await con.execute(query, days, user_id)
+            return result
+
+    except Exception as e:
+        logger.error(f'Ошибка в {__name__}: {e}')
+
+    finally:
+        await con.close()

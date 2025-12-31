@@ -13,3 +13,7 @@ class ServerActions(StatesGroup):
     select_country = State()
     input_max_users = State()
     setup_new_server = State()
+
+class SubActions(StatesGroup):
+    GET_DATA = State()
+    ADD_DAYS = State()

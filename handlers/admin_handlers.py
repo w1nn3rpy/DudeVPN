@@ -174,6 +174,7 @@ async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
         data = await state.get_data()
         user_id = data.get('user_id')
         days = data.get('days')
+        print(data)
         result = await extend_subscription(days, user_id)
         await delete_messages(call)
         await call.message.answer(f'Функция отработала.\n'

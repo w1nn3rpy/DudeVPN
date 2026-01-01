@@ -4,8 +4,10 @@ import sys
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiohttp import TCPConnector
 from decouple import config
 
 logging.basicConfig(
@@ -20,6 +22,11 @@ logger = logging.getLogger(__name__)
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
-bot = Bot(token=config('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+session = AiohttpSession(
+    connector=TCPConnector(keepalive_timeout=30, limit=50),
+    timeout=60
+)
+
+bot = Bot(token=config('TOKEN'), session=session, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 

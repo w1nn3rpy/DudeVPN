@@ -25,18 +25,22 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 
-session = AiohttpSession(
-    connector=TCPConnector(
-        family=socket.AF_INET,   # ← форсим IPv4
-        keepalive_timeout=30,
-        limit=50,
+bot: Bot | None = None
+dp: Dispatcher | None = None
+
+def setup_bot() -> None:
+    global bot, dp
+    session = AiohttpSession(
+        connector=TCPConnector(
+            family=socket.AF_INET,  # IPv4 only
+            keepalive_timeout=30,
+            limit=50,
+        )
     )
-)
 
-bot = Bot(
-    token=config('TOKEN'),
-    session=session,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-)
-
-dp = Dispatcher(storage=MemoryStorage())
+    bot = Bot(
+        token=config("TOKEN"),
+        session=session,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+    )
+    dp = Dispatcher(storage=MemoryStorage())

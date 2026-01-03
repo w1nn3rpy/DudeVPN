@@ -1,6 +1,6 @@
 import asyncio
 
-from create_bot import bot, dp, logger, setup_bot
+from create_bot import bot, dp, logger
 from handlers.admin_handlers import admin_router
 from handlers.crypto_payment_handlers import crypto_payment_router
 from handlers.start import start_router, set_commands
@@ -19,7 +19,6 @@ def start_scheduler():
 
 
 async def main():
-    setup_bot()
     await create_table_if_not_exist()
     # await check_end_subscribe()
     start_scheduler()

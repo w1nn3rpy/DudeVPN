@@ -8,6 +8,10 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from decouple import config
 
+import socket
+from aiohttp import TCPConnector
+from aiogram.client.session.aiohttp import AiohttpSession
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(levelname)s - %(filename)s:%(lineno)d: [%(asctime)s] - %(message)s',
@@ -21,6 +25,18 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 
-bot = Bot(token=config('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher(storage=MemoryStorage())
+session = AiohttpSession(
+    connector=TCPConnector(
+        family=socket.AF_INET,   # ← форсим IPv4
+        keepalive_timeout=30,
+        limit=50,
+    )
+)
 
+bot = Bot(
+    token=config('TOKEN'),
+    session=session,
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+)
+
+dp = Dispatcher(storage=MemoryStorage())

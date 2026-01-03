@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from decouple import config
 
 import socket
-from aiohttp import TCPConnector
+from aiohttp import TCPConnector, ClientSession
 from aiogram.client.session.aiohttp import AiohttpSession
 
 logging.basicConfig(
@@ -30,7 +30,9 @@ dp: Dispatcher | None = None
 
 def setup_bot() -> None:
     global bot, dp
-    session = AiohttpSession(
+
+    # создаём aiohttp-сессию с фиксированным IPv4
+    client_session = ClientSession(
         connector=TCPConnector(
             family=socket.AF_INET,  # IPv4 only
             keepalive_timeout=30,
@@ -38,9 +40,13 @@ def setup_bot() -> None:
         )
     )
 
+    # создаём AiohttpSession для aiogram
+    session = AiohttpSession(client_session=client_session)
+
     bot = Bot(
         token=config("TOKEN"),
         session=session,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
+
     dp = Dispatcher(storage=MemoryStorage())

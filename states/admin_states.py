@@ -7,6 +7,8 @@ class Promo(StatesGroup):
 class SpamState(StatesGroup):
     waiting_for_message = State()
     process_spam = State()
+    WAITING_FOR_ID = State()
+    WAITING_FOR_MESSAGE_FOR_ID = State()
 
 class ServerActions(StatesGroup):
     add_server = State()

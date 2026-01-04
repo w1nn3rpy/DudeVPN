@@ -54,7 +54,41 @@ async def admin_panel_handler(call: CallbackQuery):
 #####################################################################################################################
 
 ################################################ Блок рассылки #######################################################
+@admin_router.callback_query(F.data == 'spam_id')
+async def spam_id_handler(call: CallbackQuery, state: FSMContext):
+    await delete_messages(call)
+    await state.set_state(SpamState.WAITING_FOR_ID)
+    await call.message.answer('Отправь ID', reply_markup=cancel_fsm_kb())
 
+@admin_router.message(SpamState.WAITING_FOR_ID)
+async def getter_id_handler(message: Message, state: FSMContext):
+    id_for_message = message.text
+    await state.update_data(id_for_message=id_for_message)
+    await delete_messages(message)
+    await message.answer('Отправьте текст', reply_markup=cancel_fsm_kb())
+    await state.set_state(SpamState.WAITING_FOR_MESSAGE_FOR_ID)
+
+@admin_router.message(SpamState.WAITING_FOR_MESSAGE_FOR_ID)
+async def send_message_to_id(message: Message, state: FSMContext):
+    text = message.text
+    await state.update_data(text=text)
+    data = await state.get_data()
+    id_for_message = data['id_for_message']
+    error_message_counter = 0
+    get_message_counter = 0
+
+    try:
+        await bot.send_message(chat_id=id_for_message, text=text)
+
+    except Exception as e:
+        logger.error(f'Ошибка при рассылке текстового сообщения: {e}')
+        error_message_counter += 1
+
+    await state.clear()
+    await message.answer('Отправка завершена.\n'
+                              f'Сообщение доставлено {get_message_counter} пользователям.\n'
+                              f'Сообщение НЕ доставлено {error_message_counter} пользователям.\n',
+                              reply_markup=await main_inline_kb(message.from_user.id))
 
 @admin_router.callback_query(F.data == 'spamming')
 async def spam_handler(call: CallbackQuery, state:FSMContext):

@@ -10,6 +10,7 @@ def admin_actions_kb():
         [InlineKeyboardButton(text='🛜 Добавить сервер', callback_data='add_server')],
         [InlineKeyboardButton(text='🔎 Проверить сервера', callback_data='check_server')],
         [InlineKeyboardButton(text='📨 Рассылка сообщения', callback_data='spamming')],
+        [InlineKeyboardButton(text='Отправить сообщение по ID', callback_data='spam_id')],
         [InlineKeyboardButton(text='➕ Прибавить дни подписки', callback_data='add_days_sub')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]

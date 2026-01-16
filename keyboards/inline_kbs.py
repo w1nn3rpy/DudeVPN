@@ -10,7 +10,9 @@ async def main_inline_kb(user_id):
     kb_list = [
             [InlineKeyboardButton(text=f'{"🚀 Купить VPN" if not is_subscriber else "🚀 Продлить VPN"}', callback_data='buy')],
             [InlineKeyboardButton(text='✌️ О нашем VPN', callback_data='about'), InlineKeyboardButton(text='🆘 Техподдержка', url='tg://resolve?domain=dudevpn_supportbot')],
-            [InlineKeyboardButton(text="🔥 Ввести промокод", callback_data='promo'), InlineKeyboardButton(text='👑 Профиль', callback_data='profile')]
+            [InlineKeyboardButton(text="🔥 Ввести промокод", callback_data='promo'), InlineKeyboardButton(text='👑 Профиль', callback_data='profile')],
+            [InlineKeyboardButton(text='💵 Заработать с нами', callback_data='referral_system')]
+
     ]
     if not trial_used: kb_list.insert(0, [InlineKeyboardButton(text='🚀 Попробовать бесплатно', callback_data='trial')])
 
@@ -32,7 +34,6 @@ def about_kb():
 def profile_kb():
     inline_kb_profile = [
         [InlineKeyboardButton(text='🔍 В каталог', callback_data='buy')],
-        [InlineKeyboardButton(text='👥 Реферальная программа', callback_data='referral_system')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_profile)
@@ -48,7 +49,7 @@ def profile_sub_kb():
 
 def referral_kb():
     inline_kb = [
-        [InlineKeyboardButton(text='❓ Вопросы и ответы', url='https://telegra.ph/Nastrojka-VPN-08-03')],
+        [InlineKeyboardButton(text='💰 Заявка на вывод', url='tg://resolve?domain=DudeVPN_supportbot')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)

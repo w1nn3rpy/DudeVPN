@@ -94,7 +94,6 @@ async def create_table_if_not_exist():
             total_earned INTEGER DEFAULT 0,
             invited_by_id BIGINT DEFAULT NULL,
             referral_count INTEGER DEFAULT 0,
-            sent_reward_to_referrer BOOLEAN DEFAULT FALSE,
             is_advertiser BOOLEAN DEFAULT FALSE,
             got_from_adv BOOLEAN DEFAULT FALSE
             )'''

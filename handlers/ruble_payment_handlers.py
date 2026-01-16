@@ -6,7 +6,7 @@ from decouple import config
 from create_bot import bot, logger
 from database.db_servers import edit_server_active_users_count
 from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_vpn_key, \
-    set_for_subscribe, extension_subscribe
+    set_for_subscribe, extension_subscribe, send_reward_to_referrer
 from keyboards.inline_kbs import main_inline_kb, apps_kb
 from lingo.template import MENU_TEXT
 from outline.main import OutlineConnection
@@ -72,32 +72,18 @@ async def get_email_handler(event: Message | CallbackQuery, state: FSMContext):
     }
 
     data = await state.get_data()
-    referral_data = await get_user_referral_system_by_id(event.from_user.id)
-    referral_balance = referral_data['current_balance']
     payment_method = data['payment_method']
     country_name = data['country_name']
     sub_time = data['sub_time']
-    await state.set_state(Buy.confirm_payment_ruble)
+    price = data['price']
 
-    if 0 < referral_balance < data['price']:
-        price = data['price'] - referral_balance
-        new_referral_balance = 0
-        await state.update_data(new_ref=True, new_referral_balance=new_referral_balance, price=price)
-    elif 0 < referral_balance > data['price']:
-        price = 1
-        new_referral_balance = referral_balance - data['price']
-        await state.update_data(new_ref=True, new_referral_balance=new_referral_balance, price=price)
-    else:
-        price = data['price']
-        await state.update_data(new_ref=False)
+    await state.set_state(Buy.confirm_payment_ruble)
 
     await event.message.answer(f'Вы выбрали:\n'
                                f'Страна: <b>{country_name}</b>\n'
                                f'Длительность: <b>{sub_time} мес.</b>\n'
                                f'Метод оплаты: {method_name[payment_method]}\n'
-                               f'\nК оплате: {int(price)} {'₽'} \n'
-                               f'{f'<i>({referral_balance}р. будет списано с вашего реферального баланса)</i>'
-                               if referral_balance > 0 else ''}\n',
+                               f'\nК оплате: {int(price)} ₽',
                                reply_markup=accept_or_not_kb())
 
 
@@ -113,18 +99,15 @@ async def ruble_pay_handler(call: CallbackQuery, state: FSMContext):
         payment_method = data['payment_method']
         email = data.get('email', None)
 
-        referral_data = await get_user_referral_system_by_id(call.from_user.id)
-        referral_balance = referral_data['current_balance']
         if email:
             payment_url, payment_id = create_payment(payment_method, price, email)
         else:
             payment_url, payment_id = create_payment(payment_method, price)
 
-        await state.update_data(payment_id=payment_id, payment_url=payment_url, referral_balance=referral_balance)
+        await state.update_data(payment_id=payment_id, payment_url=payment_url)
         message = await call.message.answer(f'Страна: <b>{country_name}</b>\n'
                                             f'Длительность: <b>{sub_time} мес.</b>\n'
-                                            f'\nК оплате: {int(price)} рублей {f'({referral_balance}р. '
-                                                                               f'будет списано с вашего реферального баланса)' if referral_balance else ''}\n'
+                                            f'\nК оплате: {int(price)} рублей\n'
                                             '\nНажмите кнопку для оплаты 👇\n'
                                             '(Время действия ссылки - 10 минут)',
                                             reply_markup=pay_kb(payment_url))
@@ -152,14 +135,22 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
         data = await state.get_data()
         payment_id = data['payment_id']
         sub_time = data['sub_time']
-        new_ref = data['new_ref']
 
 
         if check_status(payment_id) is True:
-            if new_ref:
-                new_referral_balance = data['new_referral_balance']
-                await new_referral_balance_db(call.from_user.id, new_referral_balance)
             await message_with_pay_link.delete()
+            referral_data = await get_user_referral_system_by_id(call.from_user.id)
+            invited_by_id = referral_data['invited_by_id']
+            if invited_by_id:
+                price = int(data['price'])
+                percent_by_price = int(price * 0.15)
+                await send_reward_to_referrer(invited_by_id, percent_by_price)
+
+                try:
+                    await bot.send_message(invited_by_id, 'Пользователь присоединившийся по вашей ссылке оплатил подписку.\n'
+                                                          f'Вам начислено {percent_by_price} рублей на баланс.')
+                except Exception as e:
+                    logger.warning(f'Ошибка при отправке сообщения: {str(e)}')
 
             if is_subscriber is False:
                 try:

@@ -11,7 +11,7 @@ from database.db_servers import edit_server_active_users_count, get_random_serve
     get_server_with_min_user_ratio_by_country, check_server_not_full
 from keyboards.inline_kbs import main_inline_kb, about_kb, profile_kb, profile_sub_kb, apps_kb, cancel_fsm_kb, referral_kb, guide_kb
 from keyboards.payment_keyboards import get_key_kb, server_select_kb, accept_or_not_kb
-from database.db_users import get_user_info, new_user, new_user_in_referral_system, benefit_for_referral, \
+from database.db_users import get_user_info, new_user, new_user_in_referral_system, \
     update_username, get_user_referral_system_by_id, set_user_vpn_key, set_for_subscribe, \
     extension_subscribe, pop_promo, set_for_trial_subscribe, check_to_advertiser, check_got_by_adv
 from outline.main import OutlineConnection
@@ -28,47 +28,60 @@ async def set_commands():
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 async def create_user_if_not_exist(event):
-    if not await get_user_info(event.from_user.id):
-        await new_user(user_id=event.from_user.id, username=event.from_user.username)
-        referral_link = await create_start_link(bot, str(event.from_user.id), encode=True)
-        if isinstance(event, Message):
-            if len(event.text.split()) > 1:
-                referrer = event.text.split()[1]
-                referrer_id = int(decode_payload(referrer)) if referrer else None
+    user_id = event.from_user.id
 
-                if referrer_id != event.from_user.id:
-                    if await check_to_advertiser(referrer_id):
-                        await new_user_in_referral_system(event.from_user.id, referral_link, referrer_id, True)
-                        await benefit_for_referral(referrer_id, event.from_user.id)
-                        await bot.send_message(chat_id=referrer_id,
-                                               text='По вашей ссылке присоединился новый пользователь, '
-                                                    'вам начислено 50 рублей\n'
-                                                    'Спасибо за рекламу ❤️')
-                        await bot.send_message(chat_id=event.from_user.id,
-                                               text='Так как Вы узнали о нас благодаря рекламе у наших друзей - Вам доступен '
-                                                    'пробный период в течение 15 дней, вместо 2 ❤️')
-                        return
-                    else:
-                        await new_user_in_referral_system(event.from_user.id, referral_link, referrer_id)
-                        await benefit_for_referral(referrer_id, event.from_user.id)
-                        await bot.send_message(chat_id=referrer_id, text='По вашей ссылке присоединился новый пользователь, '
-                                                                         'вам начислено 50 рублей\n'
-                                                                         'Спасибо, что рассказываете про наш сервис ❤️')
-                        return
-                else:
-                    await new_user_in_referral_system(event.from_user.id, referral_link)
-                    await event.answer('Вы указали свой ID в качестве пригласившего.\n'
-                                         'Ай-ай-ай, нельзя так ☺️')
-                    return
+    if not await get_user_info(user_id):
+        await new_user(user_id=user_id,
+                       username=event.from_user.username)
+
+        referral_link = await create_start_link(bot,
+                                                str(user_id),
+                                                encode=True)
+        referrer_id = None
+
+        if isinstance(event, Message) and event.text:
+            parts = event.text.split(maxsplit=1)
+            if len(parts) > 1:
+                try:
+                    referrer_id = int(decode_payload(parts[1]))
+                except (ValueError, TypeError) as e:
+                    logger.warning(
+                        f'Некорректный referrer payload: {event.text} ({e})'
+                    )
+
+        # 🔒 Защита от самореферала
+        if referrer_id == user_id:
+            await new_user_in_referral_system(user_id, referral_link)
+            await event.answer(
+                'Вы указали свой ID в качестве пригласившего.\n'
+                'Ай-ай-ай, нельзя так ☺️'
+            )
+            return
+
+        if referrer_id:
+            if await check_to_advertiser(referrer_id):
+                await new_user_in_referral_system(user_id,
+                                                  referral_link,
+                                                  referrer_id,
+                                                  True)
+
+                await bot.send_message(chat_id=event.from_user.id,
+                                       text='Так как Вы узнали о нас благодаря рекламе у наших друзей -\n'
+                                            'Вам доступен пробный период в течение 15 дней, вместо 2 ❤️')
+                return
+
+            await new_user_in_referral_system(user_id,
+                                              referral_link,
+                                              referrer_id)
+            return
+
 
         await new_user_in_referral_system(event.from_user.id, referral_link)
 
-
     else:
-        user_data = await get_user_info(event.from_user.id)
-        name = user_data['name']
-        if name != event.from_user.username:
-            await update_username(event.from_user.id, event.from_user.username)
+        user_data = await get_user_info(user_id)
+        if user_data['name'] != event.from_user.username:
+            await update_username(user_id, event.from_user.username)
 
 
 async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):

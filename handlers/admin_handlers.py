@@ -63,6 +63,7 @@ async def spam_id_handler(call: CallbackQuery, state: FSMContext):
 @admin_router.message(SpamState.WAITING_FOR_ID)
 async def getter_id_handler(message: Message, state: FSMContext):
     id_for_message = message.text
+    await delete_messages(message)
     await state.update_data(id_for_message=id_for_message)
     await delete_messages(message)
     await message.answer('Отправьте текст', reply_markup=cancel_fsm_kb())
@@ -71,6 +72,7 @@ async def getter_id_handler(message: Message, state: FSMContext):
 @admin_router.message(SpamState.WAITING_FOR_MESSAGE_FOR_ID)
 async def send_message_to_id(message: Message, state: FSMContext):
     text = message.text
+    await delete_messages(message)
     await state.update_data(text=text)
     data = await state.get_data()
     id_for_message = data['id_for_message']
@@ -79,6 +81,7 @@ async def send_message_to_id(message: Message, state: FSMContext):
 
     try:
         await bot.send_message(chat_id=id_for_message, text=text)
+        get_message_counter += 1
 
     except Exception as e:
         logger.error(f'Ошибка при рассылке текстового сообщения: {e}')

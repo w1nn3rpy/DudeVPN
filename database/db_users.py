@@ -37,6 +37,14 @@ async def new_user_in_referral_system(user_id: int, referral_link, invited_by_id
 
         await con.execute(query, user_id, referral_link, invited_by_id, got_from_adv)
 
+        if invited_by_id:
+            await con.execute(
+            '''
+            UPDATE referral_system 
+            SET referral_count = referral_count + 1 
+            WHERE user_id = $1
+            ''', invited_by_id)
+
     except Exception as e:
         logger.error(f'Ошибка в {__name__}: {e}')
 
@@ -85,26 +93,19 @@ async def check_got_by_adv(user_id):
             await con.close()
 
 
-async def benefit_for_referral(referrer_id: int, referral_id: int):
+async def send_reward_to_referrer(referrer_id: int, amount: int):
     con = None
     try:
         con = await asyncpg.connect(DB_URL)
         async with con.transaction():
             query = '''
             UPDATE referral_system 
-            SET current_balance = current_balance + 50,
-            total_earned = total_earned + 50,
-            referral_count = referral_count + 1
-            WHERE user_id = $1'''
-
-            query_send_reward = '''
-            UPDATE referral_system
-            SET sent_reward_to_referrer = TRUE
+            SET current_balance = current_balance + $2,
+            total_earned = total_earned + $2
             WHERE user_id = $1'''
 
 
-            await con.execute(query, referrer_id)
-            await con.execute(query_send_reward, referral_id)
+            await con.execute(query, referrer_id, amount)
 
 
     except Exception as e:
@@ -379,8 +380,6 @@ async def check_end_subscribe():
             client.delete_key_method(key_id)
             await set_for_unsubscribe(user_id)
             await edit_server_active_users_count(server_id, 'sub')
-
-            #TODO пофиксить убавление юзеров на сервере
 
             try:
                 await bot.send_message(user_id, '‼️Уважаемый пользователь‼️\nВаша подписка закончилась.\n'

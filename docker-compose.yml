@@ -3,9 +3,9 @@ services:
     image: postgres:latest
     container_name: postgres_bot_container
     environment:
-      POSTGRES_USER: admin # Установить username
+      POSTGRES_USER: w1nn3r # Установить username
       POSTGRES_PASSWORD: admin # Установить пароль
-      POSTGRES_DB: bot_db
+      POSTGRES_DB: dudevpn_db
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
@@ -28,10 +28,11 @@ services:
                -c wal_buffers=16MB
                -c default_statistics_target=100
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres_user -d postgres_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U w1nn3r -d dudevpn_db" ]
       interval: 30s
       timeout: 10s
       retries: 5
+
     restart: unless-stopped
     tty: true
     stdin_open: true

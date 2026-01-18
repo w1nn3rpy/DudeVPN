@@ -20,7 +20,7 @@ async def new_user(user_id,
         await con.execute(query, user_id, username)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -46,7 +46,7 @@ async def new_user_in_referral_system(user_id: int, referral_link, invited_by_id
             ''', invited_by_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -66,7 +66,7 @@ async def check_to_advertiser(referrer_id):
         return result
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -86,7 +86,7 @@ async def check_got_by_adv(user_id):
         return result
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -109,7 +109,7 @@ async def send_reward_to_referrer(referrer_id: int, amount: int):
 
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -142,7 +142,7 @@ async def get_user_info(user_id):
         return result
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -157,7 +157,7 @@ async def get_user_referral_system_by_id(user_id: int):
         return user
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -190,7 +190,7 @@ async def pop_promo(code: str):
         return False
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -208,7 +208,7 @@ async def new_referral_balance_db(user_id: int, amount: int):
         await con.execute(query, amount, user_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -236,7 +236,7 @@ async def set_for_subscribe(user_id, buy_on, server_id):
         await con.execute(query, start_time, end_time, server_id, user_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -262,7 +262,7 @@ async def set_for_trial_subscribe(user_id, server_id, on_time):
         await con.execute(query, server_id, start_time, end_time, user_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -285,7 +285,7 @@ async def set_for_unsubscribe(user_id):
         await con.execute(query, user_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -306,7 +306,7 @@ async def set_user_vpn_key(user_id, key: str, server_id):
         await con.execute(query, key, user_id, server_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -326,7 +326,7 @@ async def update_username(user_id, username: str):
         await con.execute(query, username, user_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -361,7 +361,7 @@ async def check_end_subscribe():
                                                 'VPN ключ будет деактивирован.\n'
                                                 'Для продления подписки введите команду /buy')
             except Exception as e:
-                logger.error(f'Произошла ошибка оповещения юзера {user_id} о том, что его подписка скоро закончится: {e}')
+                logger.error(f'Error of user notify {user_id} that his subscribe expired soon: {e}')
                 continue
 
         ended_sub_users = await con.fetch(query_ended, now)  # Нахождение пользователей с закончившейся подпиской
@@ -386,11 +386,11 @@ async def check_end_subscribe():
                                                 'VPN ключ деактивирован.\n'
                                                 'Для покупки нового ключа введите команду /buy')
             except Exception as e:
-                logger.error(f'Произошла ошибка оповещения юзера {user_id} о том, что его подписка кончилась: {e}')
+                logger.error(f'Error of user notify {user_id} that his subscribe was expired: {e}')
                 continue
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -409,7 +409,7 @@ async def get_sub_ids():
         return [record['user_id'] for record in ids]
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -427,7 +427,7 @@ async def get_all_ids():
         return [record['user_id'] for record in ids]
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -456,7 +456,7 @@ async def add_balance_for_refer(to_user_id, by_user_id):
         return True
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -484,7 +484,7 @@ async def extension_subscribe(user_id, amount_days: int):
         await con.execute(set_query, new_end_subscribe, user_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:

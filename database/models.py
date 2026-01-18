@@ -110,9 +110,9 @@ async def create_table_if_not_exist():
             """, table_name)
             if not table_exists:
                 await con.execute(create_sql)
-                logger.info(f'Таблица {table_name} успешно создана!')
+                logger.info(f'Table {table_name} successful created!')
             else:
-                logger.info(f'Таблица {table_name} уже существует!')
+                logger.info(f'Table {table_name} already exist!')
 
     finally:
         if con:

@@ -93,7 +93,7 @@ async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):
             await bot.delete_message(chat_id=chat_id, message_id=message_id - i)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении сообщения: {e}')
+        logger.error(f'Error of deleting message: {e}')
 
 
 @start_router.callback_query(F.data == 'cancel_fsm')
@@ -280,7 +280,7 @@ async def referral_handler(call: CallbackQuery):
         ), reply_markup=referral_kb())
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
         await call.message.answer('Произошла ошибка. Нажмите /start')
 
 #####################################################################################################################
@@ -435,7 +435,7 @@ async def change_server_handler(call: CallbackQuery, state: FSMContext):
             await state.clear()
 
         except Exception as e:
-            logger.error(f'Ошибка в {__name__}: {e}')
+            logger.error(f'Error in {__name__}: {e}')
             await call.message.answer('Произошла ошибка. Нажмите /start')
 
     else:

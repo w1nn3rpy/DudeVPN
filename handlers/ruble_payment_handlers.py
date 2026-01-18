@@ -26,9 +26,9 @@ class MessageWithPayLink:
                 await bot.delete_message(chat_id=self.msg_id.chat.id, message_id=self.msg_id.message_id)
                 self.msg_id = None
             except Exception as e:
-                logger.error(f"Не удалось удалить сообщение: {e}")
+                logger.error(f"Cant delete message: {e}")
         else:
-            logger.info("Сообщение уже удалено или не установлено.")
+            logger.info("Message already deleted or not setted.")
 
 async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):
     try:
@@ -39,7 +39,7 @@ async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):
             await bot.delete_message(chat_id=chat_id, message_id=message_id - i)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении сообщения: {e}')
+        logger.error(f'Error of deleting message: {e}')
 
 @ruble_payment_router.callback_query(F.data == 'cancel_fsm')
 async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
@@ -150,7 +150,7 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
                     await bot.send_message(invited_by_id, 'Пользователь присоединившийся по вашей ссылке оплатил подписку.\n'
                                                           f'Вам начислено {percent_by_price} рублей на баланс.')
                 except Exception as e:
-                    logger.warning(f'Ошибка при отправке сообщения: {str(e)}')
+                    logger.warning(f'Error when send message: {str(e)}')
 
             if is_subscriber is False:
                 try:
@@ -173,7 +173,7 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
                     await state.clear()
 
                 except Exception as e:
-                    logger.error(f'Ошибка в {__name__}: {e}')
+                    logger.error(f'Error in {__name__}: {e}')
 
             else:
                 await extension_subscribe(call.from_user.id, sub_time * 31)

@@ -28,7 +28,7 @@ async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):
             await bot.delete_message(chat_id=chat_id, message_id=message_id - i)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении сообщения: {e}')
+        logger.error(f'Error of deleting message: {e}')
 
 class AddServerState(StatesGroup):
     waiting_for_server_data = State()
@@ -84,7 +84,7 @@ async def send_message_to_id(message: Message, state: FSMContext):
         get_message_counter += 1
 
     except Exception as e:
-        logger.error(f'Ошибка при рассылке текстового сообщения: {e}')
+        logger.error(f'Error when spam text message: {e}')
         error_message_counter += 1
 
     await state.clear()
@@ -144,7 +144,7 @@ async def spam_handler(call: CallbackQuery, state: FSMContext):
                 get_message_counter += 1
 
             except Exception as e:
-                logger.error(f'Ошибка при рассылке сообщения с фото: {e}')
+                logger.error(f'Error when spam message with photo: {e}')
                 error_message_counter += 1
                 continue
 
@@ -158,7 +158,7 @@ async def spam_handler(call: CallbackQuery, state: FSMContext):
                 get_message_counter += 1
 
             except Exception as e:
-                logger.error(f'Ошибка при рассылке текстового сообщения: {e}')
+                logger.error(f'Error when spam text message: {e}')
                 error_message_counter += 1
                 continue
 
@@ -294,7 +294,7 @@ async def check_server(call: CallbackQuery):
             await call.message.edit_text(full_text, reply_markup=check_server_again_kb())
             return
         except Exception as e:
-            logger.error(f'Ошибка в check_server: {e}')
+            logger.error(f'Error in check_server: {e}')
             await delete_messages(call)
             await call.message.answer(full_text, reply_markup=check_server_again_kb())
 

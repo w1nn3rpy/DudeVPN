@@ -10,7 +10,7 @@ async def get_all_servers():
         return servers
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -34,7 +34,7 @@ async def get_server_with_min_user_ratio_by_country(country_id):
         return result
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -59,7 +59,7 @@ async def get_random_server_with_min_user_ratio():
         return result
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -84,7 +84,7 @@ async def edit_server_active_users_count(server_id, action: str):
             await con.execute(query_sub, server_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -106,7 +106,7 @@ async def get_locations_of_active_servers():
             return {str(record['country_id']): record['country_name'] for record in locations}
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -121,7 +121,7 @@ async def get_server_by_id(server_id):
         return server
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -141,7 +141,7 @@ async def check_server_not_full(server_id):
         return result
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:

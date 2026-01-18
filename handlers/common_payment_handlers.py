@@ -26,7 +26,7 @@ async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):
             await bot.delete_message(chat_id=chat_id, message_id=message_id - i)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении сообщения: {e}')
+        logger.error(f'Error of deleting message: {e}')
 
 @payment_router.callback_query(F.data == 'cancel_fsm')
 async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
@@ -102,20 +102,31 @@ async def time_select_handler(call: CallbackQuery, state: FSMContext):
 @payment_router.callback_query(Buy.time_select)
 async def payment_system_select_handler(call: CallbackQuery, state: FSMContext):
     await delete_messages(call)
+    try:
+        data = await state.get_data()
+        country_name = data['country_name']
+        subscribe_idx = int(call.data.split(':')[1])
+        sub_time = int(SUBSCRIPTION_OPTIONS[subscribe_idx]['label'].split()[0])  # В МЕСЯЦАХ
+        price = int(SUBSCRIPTION_OPTIONS[subscribe_idx]['price'])
+        await state.update_data(sub_idx=subscribe_idx, sub_time=sub_time, price=price)
 
-    await state.set_state(Buy.payment_system_select)
-    data = await state.get_data()
-    country_name = data['country_name']
-    subscribe_idx = int(call.data.split(':')[1])
-    sub_time = int(SUBSCRIPTION_OPTIONS[subscribe_idx]['label'].split()[0])  # В МЕСЯЦАХ
-    price = int(SUBSCRIPTION_OPTIONS[subscribe_idx]['price'])
-    await state.update_data(sub_idx=subscribe_idx, sub_time=sub_time, price=price)
+        await call.message.answer_photo(photo=config('PAYMENT_METHOD'),
+                                        caption=f'Вы выбрали:\n'
+                                      f'<b>{country_name}</b>\n'
+                                      f'Длительность: <b>{sub_time} мес.</b>\n'
+                                      '\nВыберите способ оплаты 👇', reply_markup=select_payment_system_kb())
 
-    await call.message.answer_photo(photo=config('PAYMENT_METHOD'),
-                                    caption=f'Вы выбрали:\n'
-                                  f'<b>{country_name}</b>\n'
-                                  f'Длительность: <b>{sub_time} мес.</b>\n'
-                                  '\nВыберите способ оплаты 👇', reply_markup=select_payment_system_kb())
+        await state.set_state(Buy.payment_system_select)
+
+    except Exception as e:
+        logger.error(f'Error in {__name__}: {str(e)}\n'
+                     f'Content data: {data}\n'
+                     f'Content call.data: {call.data}\n'
+                     f'Content subscribe idx: {subscribe_idx}'
+                     f'Content sub_time: {sub_time}\n')
+        await call.message.answer(f'Произошла непредвиденная ошибка.\n'
+                                  f'Попробуйте снова', reply_markup=await main_inline_kb(call.from_user.id))
+        await state.clear()
 
 
 @payment_router.callback_query(Buy.payment_system_select)
@@ -137,8 +148,8 @@ async def confirm_payment_handler(call: CallbackQuery, state: FSMContext):
         price = PRICE_DICT[sub_time]
 
     except KeyError as e:
-        logger.error(f'Ошибка в {__name__}: {str(e)}\n'
-                     f'Содержимое data: {data}')
+        logger.error(f'Error in {__name__}: {str(e)}\n'
+                     f'Content data: {data}')
         await call.message.answer(f'Произошла непредвиденная ошибка.\n'
                                   f'Попробуйте снова', reply_markup=await main_inline_kb(call.from_user.id))
         await state.clear()

@@ -29,7 +29,7 @@ async def get_country_by_id(country_id):
         return country
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -43,7 +43,7 @@ async def get_all_users():
         return users
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -57,7 +57,7 @@ async def get_all_subscribers():
         return subs
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -71,7 +71,7 @@ async def get_countries():
         return countries
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -85,7 +85,7 @@ async def get_country_by_code(code):
         return country
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -103,7 +103,7 @@ async def add_server(country_id, server_ip, server_password, outline_url, outlin
                           outline_url, outline_cert, is_active, active_users, max_users, vless_port, manager_port)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         if con:
@@ -131,7 +131,7 @@ async def extend_subscription(days: int, user_id: int | None = None):
             return await con.execute(query, days, user_id)
 
     except Exception as e:
-        logger.error(f'Ошибка в {__name__}: {e}')
+        logger.error(f'Error in {__name__}: {e}')
 
     finally:
         await con.close()

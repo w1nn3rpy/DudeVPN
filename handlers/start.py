@@ -187,7 +187,7 @@ async def profile(call: CallbackQuery):
                                                        balance=balance,
                                                        days_left=days_left,
                                                        key=vpn_key,
-                                                       hysteria_link=hysteria_link), reply_markup=profile_sub_kb())
+                                                       hysteria=hysteria_link), reply_markup=profile_sub_kb())
     if user_data['is_subscriber'] is False:
         await bot.send_photo(photo=config('PROFILE'),
                              chat_id=call.from_user.id,

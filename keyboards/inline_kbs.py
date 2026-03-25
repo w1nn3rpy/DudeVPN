@@ -72,7 +72,7 @@ def apps_kb():
                               url='https://apps.apple.com/us/app/outline-secure-internet-access/id1356178125?mt=12')],
         [InlineKeyboardButton(text='🖥️ Клиент Outline для Windows', url='https://outline-vpn.com/download.php?os=c_windows')],
         [InlineKeyboardButton(text='🖥️ Клиент Hysteria2 для Windows',
-                              url='https://github.com/apernet/hysteria/releases/download/app%2Fv2.7.1/hysteria-windows-amd64.exe')],
+                              url='https://github.com/Happ-proxy/happ-desktop/releases/latest/download/setup-Happ.x64.exe')],
 
         [InlineKeyboardButton(text='📖 Инструкция Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
         [InlineKeyboardButton(text='📖 Инструкция Hysteria2', url='https://telegra.ph/Instrukciya-Hysteria-03-25')]

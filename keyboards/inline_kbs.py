@@ -56,21 +56,33 @@ def referral_kb():
 
 def apps_kb():
     inline_kb = [
-        [InlineKeyboardButton(text='🍏 Клиент для iOS', url='https://apps.apple.com/us/app/outline-app/id1356177741')],
-        [InlineKeyboardButton(text='🤖 Клиент для Android',
-                              url='https://play.google.com'
-                                  '/store/apps/details?id=org.outline.android.client&pcampaignid=web_share')],
-        [InlineKeyboardButton(text='💻 Клиент для MacOS',
+        [InlineKeyboardButton(text='🍏 Клиент Outline для iOS', url='https://apps.apple.com/us/app/outline-app/id1356177741')],
+        [InlineKeyboardButton(text='🍏 Клиент Hysteria2 для iOS',
+                              url='https://apps.apple.com/us/app/streisand/id6450534064?l=ru')],
+
+        [InlineKeyboardButton(text='🤖 Клиент Outline для Android',
+                              url='https://play.google.com/store/apps/details?id=org.outline.android.client')],
+        [InlineKeyboardButton(text='🤖 Клиент Hysteria2 для Android',
+                              url='https://play.google.com/store/apps/details?id=dev.hexasoftware.v2box')],
+        [InlineKeyboardButton(text='💻 Клиент Outline для MacOS',
                               url='https://apps.apple.com/us/app/outline-secure-internet-access/id1356178125?mt=12')],
-        [InlineKeyboardButton(text='🖥️ Клиент для Windows', url='https://outline-vpn.com/download.php?os=c_windows')],
-        [InlineKeyboardButton(text='📖 Инструкция', url='https://telegra.ph/Nastrojka-VPN-08-03')]
+        [InlineKeyboardButton(text='💻 Клиент Hysteria2 для MacOS',
+                              url='https://apps.apple.com/us/app/outline-secure-internet-access/id1356178125?mt=12')],
+        [InlineKeyboardButton(text='🖥️ Клиент Outline для Windows', url='https://outline-vpn.com/download.php?os=c_windows')],
+        [InlineKeyboardButton(text='🖥️ Клиент Hysteria2 для Windows',
+                              url='https://github.com/apernet/hysteria/releases/download/app%2Fv2.7.1/hysteria-windows-amd64.exe')],
+
+        [InlineKeyboardButton(text='📖 Инструкция Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
+        [InlineKeyboardButton(text='📖 Инструкция Hysteria2', url='https://telegra.ph/Nastrojka-VPN-08-03')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
 
 def guide_kb():
     inline_kb = [
-        [InlineKeyboardButton(text='📖 Прочитать', url='https://telegra.ph/Nastrojka-VPN-08-03')],
+        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
+        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Hysteria2', url='')],
+
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
 
     ]

@@ -32,7 +32,8 @@ PROFILE_SUB = '''
 ├ <b>Реферальный баланс</b>: {balance}р
 ├ <b>Подписка</b>: ✅
 ├ <b>Осталось дней подписки</b>: {days_left} дн.
-└ <b>Ключ</b>: <code>{key}</code>
+├ <b>Ключ для Outline</b>: <code>{key}</code>
+└ <b>Ссылка Hysteria2</b>: <code>{hysteria_link}</code>
 '''
 
 PROFILE_NON_SUB = '''

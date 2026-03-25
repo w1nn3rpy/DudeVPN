@@ -277,6 +277,7 @@ async def set_for_unsubscribe(user_id):
         UPDATE users 
         SET is_subscriber = False,
         vpn_key = null, 
+        hysteria_token = null, 
         server_id = null,
         start_subscribe = null,
         end_subscribe = null
@@ -292,18 +293,19 @@ async def set_for_unsubscribe(user_id):
             await con.close()
 
 
-async def set_user_vpn_key(user_id, key: str, server_id):
+async def set_user_vpn_key(user_id, outline_key: str, hysteria_token, server_id):
     con = None
     try:
         con = await asyncpg.connect(DB_URL)
         query = '''
         UPDATE users 
         SET vpn_key = $1,
+        hysteria_token = $2,
         server_id = $3
-        WHERE user_id = $2
+        WHERE user_id = $4
         '''
 
-        await con.execute(query, key, user_id, server_id)
+        await con.execute(query, outline_key, hysteria_token, server_id, user_id)
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')

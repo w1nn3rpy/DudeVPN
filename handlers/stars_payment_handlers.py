@@ -1,3 +1,5 @@
+import secrets
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -6,7 +8,7 @@ from decouple import config
 
 from database.db_servers import edit_server_active_users_count
 from database.db_users import get_user_info, set_user_vpn_key, set_for_subscribe, extension_subscribe
-from handlers.start import delete_messages
+from handlers.start import delete_messages, hysteria_country
 from keyboards.inline_kbs import apps_kb, main_inline_kb
 from lingo.template import MENU_TEXT
 from outline.main import OutlineConnection
@@ -86,13 +88,17 @@ async def successful_payment_handler(message: Message, state: FSMContext):
                 key = client.create_new_key(str(user_id),
                                             message.from_user.username if message.from_user.username else str(
                                                 user_id)).access_url
-                await set_user_vpn_key(user_id, key, server_id)
+                hysteria_token = secrets.token_urlsafe(16)
+
+                await set_user_vpn_key(user_id, key, hysteria_token, server_id)
                 await set_for_subscribe(user_id, int(duration) * 31, server_id)
                 await edit_server_active_users_count(server_id, 'add')
 
                 await message.answer_photo(photo=config('CONGRATS'),
                                            caption='Спасибо за покупку!\n'
-                                          f'Ваш ключ: <code>{key}</code>\n'
+                                          f'Ваш ключ Outline: <code>{key}</code>\n'
+                                          f'Ваша ссылка для протокола Hysteria2: <code>hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
+
                                           f'\nВыберите свою платформу для скачивания приложения',
                                           reply_markup=apps_kb())
                 await state.clear()

@@ -5,6 +5,7 @@ from aiogram.types import Message, CallbackQuery, BotCommand, BotCommandScopeDef
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.deep_linking import create_start_link, decode_payload
 from datetime import datetime
+import secrets
 
 from database.db_admin import get_country_by_id
 from database.db_servers import edit_server_active_users_count, get_random_server_with_min_user_ratio, get_server_by_id, \
@@ -20,6 +21,11 @@ from lingo.template import MENU_TEXT, ABOUT_MENU, PROFILE_SUB, PROFILE_NON_SUB, 
 from states.user_states import Help, Trial, Promo, Server
 
 start_router = Router()
+
+hysteria_country = {1: 'cdn',
+                    2: 'prod',
+                    3: 'test',
+                    6: 'static'}
 
 async def set_commands():
     commands = [BotCommand(command='start', description='Старт'),
@@ -165,11 +171,14 @@ async def profile(call: CallbackQuery):
     username = call.from_user.username if call.from_user.username else call.from_user.full_name
     referral_count = user_ref_data['referral_count']
     balance = user_ref_data['current_balance']
-
+    hysteria_token = user_data['hysteria_token']
     if user_data['is_subscriber']:
+        server_id = int(user_data['server_id'])
         math_days_left = user_data['end_subscribe'] - datetime.now().date()
         days_left = math_days_left.days
         vpn_key = user_data['vpn_key']
+        hysteria_link = f'hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
+
         await bot.send_photo(photo=config('PROFILE'),
                              chat_id=call.from_user.id,
                              caption=PROFILE_SUB.format(user_id=user_id,
@@ -177,7 +186,8 @@ async def profile(call: CallbackQuery):
                                                        referral_count=referral_count,
                                                        balance=balance,
                                                        days_left=days_left,
-                                                       key=vpn_key), reply_markup=profile_sub_kb())
+                                                       key=vpn_key,
+                                                       hysteria_link=hysteria_link), reply_markup=profile_sub_kb())
     if user_data['is_subscriber'] is False:
         await bot.send_photo(photo=config('PROFILE'),
                              chat_id=call.from_user.id,
@@ -232,14 +242,16 @@ async def promo_handler(message: Message, state: FSMContext):
                 key = outline_client.create_new_key(str(message.from_user.id),
                                                     message.from_user.username if message.from_user.username
                                                     else str(message.from_user.id)).access_url
+                hysteria_token = secrets.token_urlsafe(16)
                 await edit_server_active_users_count(server_id, 'add')
-                await set_user_vpn_key(message.from_user.id, key, server_id)
+                await set_user_vpn_key(message.from_user.id, key, hysteria_token, server_id)
 
                 await message.answer_photo(photo=config('CONGRATS'),
                                            caption=f'Промокод {promo_code} активирован! 🔥\n'
                                                    f'Вам предоставлен доступ на {duration} дней.\n\n'
-                                                   f'Ваш ключ:\n <code>{key}</code> (нажмите, чтобы скопировать)\n'
-                                                   f'\nВыберите свою платформу для скачивания приложения',
+                                                   f'Ваш ключ Outline:\n <code>{key}</code> (нажмите, чтобы скопировать)\n'
+                                                   f'Ваша ссылка для протокола Hysteria2: <code>hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
+                                                   f'\nВыберите свою платформу для скачивания приложений',
                                            reply_markup=apps_kb())
                 await message.answer('Инструкция по настройке', reply_markup=guide_kb())
                 await state.clear()
@@ -315,12 +327,14 @@ async def get_trial_key(call: CallbackQuery, state: FSMContext):
     client = OutlineConnection(server_api, server_cert)
     key = client.create_new_key(str(call.from_user.id), call.from_user.username if call.from_user.username else str(
         call.from_user.id)).access_url
-    await set_user_vpn_key(call.from_user.id, key, server_id)
+    hysteria_token = secrets.token_urlsafe(16)
+    await set_user_vpn_key(call.from_user.id, key, hysteria_token, server_id)
     await set_for_trial_subscribe(call.from_user.id, server_id, on_time)
     await edit_server_active_users_count(server_id, 'add')
 
-    await call.message.answer(f'Ваш ключ:\n <code>{key}</code>\n'
-                              f'\nВыберите свою платформу для скачивания приложения',
+    await call.message.answer(f'Ваш ключ Outline:\n <code>{key}</code>\n'
+                              f'Ваша ссылка для протокола Hysteria2: <code>hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
+                              f'\nВыберите свою платформу для скачивания приложений',
                               reply_markup=apps_kb())
     await call.message.answer('Инструкция по настройке', reply_markup=guide_kb())
     await state.clear()
@@ -421,13 +435,14 @@ async def change_server_handler(call: CallbackQuery, state: FSMContext):
             client = OutlineConnection(new_server_api, new_server_cert)
             key = client.create_new_key(str(call.from_user.id), call.from_user.username if call.from_user.username else str(
                 call.from_user.id)).access_url
-
-            await set_user_vpn_key(call.from_user.id, key, new_server_id)
+            hysteria_token = secrets.token_urlsafe(16)
+            await set_user_vpn_key(call.from_user.id, key, hysteria_token, new_server_id)
 
             await edit_server_active_users_count(new_server_id, 'add')
             await edit_server_active_users_count(old_server_id, 'sub')
 
-            await call.message.answer(f'Ваш новый ключ:\n <code>{key}</code>\n', reply_markup=await main_inline_kb(call.from_user.id))
+            await call.message.answer(f'Ваш новый ключ Outline:\n <code>{key}</code>\n'
+                                      f'Ваша новая ссылка для протокола Hysteria2: <code>hysteria2://{hysteria_token}@{hysteria_country[new_server_id]}.dudevpn.me:443</code>', reply_markup=await main_inline_kb(call.from_user.id))
 
             old_client = OutlineConnection(old_server_api, old_outline_cert)
             old_client.delete_key_method(old_key_id)

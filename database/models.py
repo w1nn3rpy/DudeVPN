@@ -17,6 +17,7 @@ async def create_table_if_not_exist():
                 is_admin bool DEFAULT FALSE,
                 is_subscriber bool DEFAULT FALSE,
                 vpn_key TEXT DEFAULT NULL,
+                hysteria_token TEXT DEFAULT NULL,
                 server_id INT2 DEFAULT NULL,
                 start_subscribe DATE DEFAULT NULL,
                 end_subscribe DATE DEFAULT NULL,

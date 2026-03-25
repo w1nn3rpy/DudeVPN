@@ -1,3 +1,5 @@
+import secrets
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, Union
@@ -7,6 +9,7 @@ from create_bot import bot, logger
 from database.db_servers import edit_server_active_users_count
 from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_vpn_key, \
     set_for_subscribe, extension_subscribe, send_reward_to_referrer
+from handlers.start import hysteria_country
 from keyboards.inline_kbs import main_inline_kb, apps_kb
 from lingo.template import MENU_TEXT
 from outline.main import OutlineConnection
@@ -160,14 +163,17 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
                     client = OutlineConnection(server_api, server_cert)
                     key = client.create_new_key(str(call.from_user.id), call.from_user.username if call.from_user.username else str(call.from_user.id)).access_url
+                    hysteria_token = secrets.token_urlsafe(16)
 
-                    await set_user_vpn_key(call.from_user.id, key, server_id)
+                    await set_user_vpn_key(call.from_user.id, key, hysteria_token, server_id)
                     await set_for_subscribe(call.from_user.id, sub_time * 31, server_id)
                     await edit_server_active_users_count(server_id, 'add')
 
                     await call.message.answer_photo(photo=config('CONGRATS'),
                                                     caption='Спасибо за покупку!\n'
-                                                  f'Ваш ключ: <code>{key}</code>\n'
+                                                  f'Ваш ключ Outline: <code>{key}</code>\n'
+                                                  f'Ваша ссылка для протокола Hysteria2: <code>hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
+
                                                   f'\nВыберите свою платформу для скачивания приложения',
                                                   reply_markup=apps_kb())
                     await state.clear()

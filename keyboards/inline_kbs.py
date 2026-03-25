@@ -73,7 +73,7 @@ def apps_kb():
                               url='https://github.com/apernet/hysteria/releases/download/app%2Fv2.7.1/hysteria-windows-amd64.exe')],
 
         [InlineKeyboardButton(text='📖 Инструкция Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
-        [InlineKeyboardButton(text='📖 Инструкция Hysteria2', url='https://telegra.ph/Nastrojka-VPN-08-03')]
+        [InlineKeyboardButton(text='📖 Инструкция Hysteria2', url='https://telegra.ph/Instrukciya-Hysteria-03-25')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
@@ -81,7 +81,7 @@ def apps_kb():
 def guide_kb():
     inline_kb = [
         [InlineKeyboardButton(text='📖 Прочитать инструкцию для Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
-        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Hysteria2', url='')],
+        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Hysteria2', url='https://telegra.ph/Instrukciya-Hysteria-03-25')],
 
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
 

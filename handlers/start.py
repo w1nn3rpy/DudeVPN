@@ -30,7 +30,8 @@ hysteria_country = {1: 'cdn',
 async def set_commands():
     commands = [BotCommand(command='start', description='Старт'),
                 BotCommand(command='buy', description='Купить VPN'),
-                BotCommand(command='help', description='Помощь')]
+                BotCommand(command='help', description='Помощь'),
+                BotCommand(command='profile', description='Профиль')]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 async def create_user_if_not_exist(event):
@@ -160,6 +161,7 @@ async def about_handler(event: Message|CallbackQuery, state: FSMContext):
                          reply_markup=about_kb())
 
 @start_router.callback_query(F.data == 'profile')
+@start_router.message(Command('profile'))
 async def profile(call: CallbackQuery):
     await delete_messages(call)
 

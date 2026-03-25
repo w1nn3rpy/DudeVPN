@@ -42,8 +42,8 @@ def profile_sub_kb():
     inline_kb_sub_profile = [
         [InlineKeyboardButton(text='🔄 Сменить сервер', callback_data='change_server')],
         [InlineKeyboardButton(text='👥 Реферальная программа', callback_data='referral_system')],
-        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
-        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Hysteria2',
+        [InlineKeyboardButton(text='📖 Инструкция Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
+        [InlineKeyboardButton(text='📖 Инструкция Hysteria2',
                               url='https://telegra.ph/Instrukciya-Hysteria-03-25')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]

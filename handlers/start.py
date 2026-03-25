@@ -177,7 +177,7 @@ async def profile(call: CallbackQuery):
         math_days_left = user_data['end_subscribe'] - datetime.now().date()
         days_left = math_days_left.days
         vpn_key = user_data['vpn_key']
-        hysteria_link = f'hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
+        hysteria_link = f'<code>hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
 
         await bot.send_photo(photo=config('PROFILE'),
                              chat_id=call.from_user.id,

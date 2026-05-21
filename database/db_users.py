@@ -291,7 +291,7 @@ async def set_user_sub_link(user_id, sub_link: str):
         con = await asyncpg.connect(DB_URL)
         query = '''
         UPDATE users 
-        SET sub_link = $1,
+        SET sub_link = $1
         WHERE user_id = $2
         '''
 

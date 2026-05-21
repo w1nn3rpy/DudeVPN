@@ -304,6 +304,6 @@ async def get_trial_key(call: CallbackQuery, state: FSMContext):
     await set_user_sub_link(call.from_user.id, sub_link)
     await set_for_trial_subscribe(call.from_user.id, on_time)
 
-    await call.message.answer(f'Ваша ссылка на подписку и инструкцию: {sub_link}'
+    await call.message.answer(f'🎉 Ваша ссылка на подписку и инструкцию: {sub_link} 🎉\n'
                               f'Для перехода в главное меню нажмите /start')
     await state.clear()

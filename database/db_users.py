@@ -1,9 +1,7 @@
 import asyncpg
 
-from database.db_servers import get_server_by_id, edit_server_active_users_count
 from work_time.time_func import *
 from create_bot import bot, logger
-from outline.main import OutlineConnection
 from database.models import DB_URL
 
 async def new_user(user_id,
@@ -121,11 +119,10 @@ async def get_user_info(user_id):
         1 - name str\n
         2 - is_admin bool\n
         3 - is_subscriber bool\n
-        4 - vpn_key str\n
-        5 - server_id int\n
-        6 - start_subscribe date\n
-        7 - end_subscribe date\n
-        8 - trial_used bool\n
+        4 - sub_link str\n
+        5 - start_subscribe date\n
+        6 - end_subscribe date\n
+        7 - trial_used bool\n
     """
     con = None
 
@@ -215,7 +212,7 @@ async def new_referral_balance_db(user_id: int, amount: int):
             await con.close()
 
 
-async def set_for_subscribe(user_id, buy_on, server_id):
+async def set_for_subscribe(user_id, buy_on):
     """
     buy_on - кол-во дней подписки
     """
@@ -227,13 +224,12 @@ async def set_for_subscribe(user_id, buy_on, server_id):
         query = '''
         UPDATE users SET is_subscriber = True,
         start_subscribe = $1,
-        end_subscribe = $2, 
-        server_id = $3,
+        end_subscribe = $2,
         trial_used = TRUE
-        WHERE user_id = $4
+        WHERE user_id = $3
                '''
 
-        await con.execute(query, start_time, end_time, server_id, user_id)
+        await con.execute(query, start_time, end_time, user_id)
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')
@@ -243,7 +239,7 @@ async def set_for_subscribe(user_id, buy_on, server_id):
             await con.close()
 
 
-async def set_for_trial_subscribe(user_id, server_id, on_time):
+async def set_for_trial_subscribe(user_id, on_time):
 
     start_time, end_time = get_time_for_test_subscribe(on_time)
     con = None
@@ -253,13 +249,12 @@ async def set_for_trial_subscribe(user_id, server_id, on_time):
         query = '''
         UPDATE users 
         SET is_subscriber = True,
-        server_id = $1,
-        start_subscribe = $2,
-        end_subscribe = $3,
+        start_subscribe = $1,
+        end_subscribe = $2,
         trial_used = TRUE
-        WHERE user_id = $4
+        WHERE user_id = $3
                '''
-        await con.execute(query, server_id, start_time, end_time, user_id)
+        await con.execute(query, start_time, end_time, user_id)
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')
@@ -276,9 +271,6 @@ async def set_for_unsubscribe(user_id):
         query = '''
         UPDATE users 
         SET is_subscriber = False,
-        vpn_key = null, 
-        hysteria_token = null, 
-        server_id = null,
         start_subscribe = null,
         end_subscribe = null
         WHERE user_id = $1
@@ -293,19 +285,17 @@ async def set_for_unsubscribe(user_id):
             await con.close()
 
 
-async def set_user_vpn_key(user_id, outline_key: str, hysteria_token, server_id):
+async def set_user_sub_link(user_id, sub_link: str):
     con = None
     try:
         con = await asyncpg.connect(DB_URL)
         query = '''
         UPDATE users 
-        SET vpn_key = $1,
-        hysteria_token = $2,
-        server_id = $3
-        WHERE user_id = $4
+        SET sub_link = $1,
+        WHERE user_id = $2
         '''
 
-        await con.execute(query, outline_key, hysteria_token, server_id, user_id)
+        await con.execute(query, sub_link, user_id)
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')
@@ -360,8 +350,8 @@ async def check_end_subscribe():
             end_subscribe = user['end_subscribe']
             try:
                 await bot.send_message(user_id, f'‼️Уважаемый пользователь‼️\nВаша подписка закончится {end_subscribe}\n'
-                                                'VPN ключ будет деактивирован.\n'
-                                                'Для продления подписки введите команду /buy')
+                                                'Доступ к VPN будет приостановлен.\n'
+                                                'Для продления подписки нажмите 👉 /buy')
             except Exception as e:
                 logger.error(f'Error of user notify {user_id} that his subscribe expired soon: {e}')
                 continue
@@ -370,23 +360,13 @@ async def check_end_subscribe():
 
         for user in ended_sub_users:
             user_id = user['user_id']
-            key = user['vpn_key']
-            server_id = user['server_id']
 
-            server_data = await get_server_by_id(server_id)
-            outline_url = server_data['outline_url']
-            outline_cert = server_data['outline_cert']
-
-            client = OutlineConnection(outline_url, outline_cert)
-            key_id = client.get_key_id_from_url(key)
-            client.delete_key_method(key_id)
             await set_for_unsubscribe(user_id)
-            await edit_server_active_users_count(server_id, 'sub')
 
             try:
                 await bot.send_message(user_id, '‼️Уважаемый пользователь‼️\nВаша подписка закончилась.\n'
-                                                'VPN ключ деактивирован.\n'
-                                                'Для покупки нового ключа введите команду /buy')
+                                                'Доступ к VPN приостановлен.\n'
+                                                'Для продления подписки нажмите 👉 /buy')
             except Exception as e:
                 logger.error(f'Error of user notify {user_id} that his subscribe was expired: {e}')
                 continue

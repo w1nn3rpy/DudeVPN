@@ -1,27 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from database.db_servers import get_locations_of_active_servers
 from lingo.template import SUBSCRIPTION_OPTIONS
 
 
-async def server_select_kb(skip_id:int = None):
-    active_servers = await get_locations_of_active_servers()
-    builder =  InlineKeyboardBuilder()
-
-    if active_servers:
-        for country_id, country_name in active_servers.items():
-            if skip_id:
-                if int(country_id) == int(skip_id):
-                    continue
-
-            builder.button(text=country_name, callback_data=f'{country_name}_{country_id}')
-        builder.adjust(2)
-
-    builder.row(InlineKeyboardButton(text='🏠 На главную', callback_data='get_home'))
-
-
-    return builder.as_markup()
 
 def select_time_kb():
     inline_kb_buy = InlineKeyboardBuilder()
@@ -76,9 +58,9 @@ def payed_kb():
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
-def get_key_kb(time_subscribe):
+def get_link_kb(time_subscribe):
     inline_kb = [
-        [InlineKeyboardButton(text='🚀 Получить ключ', callback_data=f'get-key_{time_subscribe}')]
+        [InlineKeyboardButton(text='🚀 Получить подписку', callback_data=f'get-link_{time_subscribe}')]
     ]
     if time_subscribe == 2 or time_subscribe == 15:
         inline_kb.append([InlineKeyboardButton(text='❌ Вернуться в меню', callback_data='cancel_fsm')])

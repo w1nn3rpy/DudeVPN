@@ -6,15 +6,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LabeledPrice, CallbackQuery
 from decouple import config
 
-from database.db_servers import edit_server_active_users_count
-from database.db_users import get_user_info, set_user_vpn_key, set_for_subscribe, extension_subscribe
-from handlers.start import delete_messages, hysteria_country
-from keyboards.inline_kbs import apps_kb, main_inline_kb
+from database.db_users import get_user_info, set_user_sub_link, set_for_subscribe, extension_subscribe
+from handlers.start import delete_messages
+from keyboards.inline_kbs import main_inline_kb
 from lingo.template import MENU_TEXT
-from outline.main import OutlineConnection
 from states.payment_states import Buy
 from keyboards.payment_keyboards import stars_payment_keyboard
 from create_bot import bot
+from utils.remna_api import get_or_create_subscription
 
 PRICE_DICT = { ### {месяцев подписки: цена в stars} ###
     1: 160,
@@ -80,27 +79,14 @@ async def successful_payment_handler(message: Message, state: FSMContext):
 
         if is_subscriber is False:
             try:
-                server_id = data['server_id']
-                server_api = data['server_api']
-                server_cert = data['server_cert']
-
-                client = OutlineConnection(server_api, server_cert)
-                key = client.create_new_key(str(user_id),
-                                            message.from_user.username if message.from_user.username else str(
-                                                user_id)).access_url
-                hysteria_token = secrets.token_urlsafe(16)
-
-                await set_user_vpn_key(user_id, key, hysteria_token, server_id)
-                await set_for_subscribe(user_id, int(duration) * 31, server_id)
-                await edit_server_active_users_count(server_id, 'add')
+                sub_link = await get_or_create_subscription(user_id, int(duration) * 31)
+                await set_user_sub_link(user_id, sub_link)
+                await set_for_subscribe(user_id, int(duration) * 31)
 
                 await message.answer_photo(photo=config('CONGRATS'),
-                                           caption='Спасибо за покупку!\n'
-                                          f'Ваш ключ Outline: <code>{key}</code>\n'
-                                          f'Ваша ссылка для протокола Hysteria2: <code>hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
-
-                                          f'\nВыберите свою платформу для скачивания приложения',
-                                          reply_markup=apps_kb())
+                                                    caption='Спасибо за покупку!\n'
+                                                    f'Ваша ссылка на подписку и инструкцию: {sub_link}'
+                                                    f'Для перехода в главное меню нажмите /start')
                 await state.clear()
 
             except Exception as e:
@@ -108,6 +94,7 @@ async def successful_payment_handler(message: Message, state: FSMContext):
 
         else:
             await extension_subscribe(user_id, int(duration) * 31)
+            await get_or_create_subscription(user_id, int(duration) * 31)
             await message.answer('Спасибо за продление подписки!\n'
                                       'Мы стараемся для Вас ❤️\n'
                                       '\nДля возврата в меню нажмите /start')

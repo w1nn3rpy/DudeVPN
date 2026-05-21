@@ -40,11 +40,7 @@ def profile_kb():
 
 def profile_sub_kb():
     inline_kb_sub_profile = [
-        [InlineKeyboardButton(text='🔄 Сменить сервер', callback_data='change_server')],
         [InlineKeyboardButton(text='👥 Реферальная программа', callback_data='referral_system')],
-        [InlineKeyboardButton(text='📖 Инструкция Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
-        [InlineKeyboardButton(text='📖 Инструкция Hysteria2',
-                              url='https://telegra.ph/Instrukciya-Hysteria-03-25')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_sub_profile)
@@ -53,40 +49,6 @@ def referral_kb():
     inline_kb = [
         [InlineKeyboardButton(text='💰 Заявка на вывод', url='tg://resolve?domain=DudeVPN_supportbot')],
         [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
-
-def apps_kb():
-    inline_kb = [
-        [InlineKeyboardButton(text='🍏 Клиент Outline для iOS', url='https://apps.apple.com/us/app/outline-app/id1356177741')],
-        [InlineKeyboardButton(text='🍏 Клиент Hysteria2 для iOS',
-                              url='https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973')],
-
-        [InlineKeyboardButton(text='🤖 Клиент Outline для Android',
-                              url='https://play.google.com/store/apps/details?id=org.outline.android.client')],
-        [InlineKeyboardButton(text='🤖 Клиент Hysteria2 для Android',
-                              url='https://play.google.com/store/apps/details?id=com.happproxy&hl=ru')],
-        [InlineKeyboardButton(text='💻 Клиент Outline для MacOS',
-                              url='https://apps.apple.com/us/app/outline-secure-internet-access/id1356178125?mt=12')],
-        [InlineKeyboardButton(text='💻 Клиент Hysteria2 для MacOS',
-                              url='https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973')],
-        [InlineKeyboardButton(text='🖥️ Клиент Outline для Windows', url='https://outline-vpn.com/download.php?os=c_windows')],
-        [InlineKeyboardButton(text='🖥️ Клиент Hysteria2 для Windows',
-                              url='https://github.com/Happ-proxy/happ-desktop/releases/latest/download/setup-Happ.x64.exe')],
-
-        [InlineKeyboardButton(text='📖 Инструкция Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
-        [InlineKeyboardButton(text='📖 Инструкция Hysteria2', url='https://telegra.ph/Instrukciya-Hysteria-03-25')]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
-
-
-def guide_kb():
-    inline_kb = [
-        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Outline', url='https://telegra.ph/Nastrojka-VPN-08-03')],
-        [InlineKeyboardButton(text='📖 Прочитать инструкцию для Hysteria2', url='https://telegra.ph/Instrukciya-Hysteria-03-25')],
-
-        [InlineKeyboardButton(text='🏠 На главную', callback_data='get_home')]
-
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 

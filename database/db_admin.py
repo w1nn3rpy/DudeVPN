@@ -20,21 +20,6 @@ async def del_promo(promo_code: str):
     await con.close()
 
 
-async def get_country_by_id(country_id):
-    con = None
-    try:
-        con = await asyncpg.connect(DB_URL)
-        country = await con.fetchrow(
-            'SELECT * FROM countries WHERE id = $1', country_id)
-        return country
-
-    except Exception as e:
-        logger.error(f'Error in {__name__}: {e}')
-
-    finally:
-        if con:
-            await con.close()
-
 async def get_all_users():
     con = None
     try:
@@ -69,38 +54,6 @@ async def get_countries():
         con = await asyncpg.connect(DB_URL)
         countries = await con.fetch('SELECT * FROM countries')
         return countries
-
-    except Exception as e:
-        logger.error(f'Error in {__name__}: {e}')
-
-    finally:
-        if con:
-            await con.close()
-
-async def get_country_by_code(code):
-    con = None
-    try:
-        con = await asyncpg.connect(DB_URL)
-        country = await con.fetchrow('SELECT * FROM countries WHERE code = $1', code)
-        return country
-
-    except Exception as e:
-        logger.error(f'Error in {__name__}: {e}')
-
-    finally:
-        if con:
-            await con.close()
-
-async def add_server(country_id, server_ip, server_password, outline_url, outline_cert, is_active, active_users, max_users, vless_port, manager_port):
-    con = None
-    try:
-        con = await asyncpg.connect(DB_URL)
-        query = '''
-        INSERT INTO servers (country_id, server_ip, server_password, outline_url, 
-        outline_cert, is_active, active_users, max_users, vless_port, manager_port)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)'''
-        await con.execute(query,country_id, server_ip, server_password,
-                          outline_url, outline_cert, is_active, active_users, max_users, vless_port, manager_port)
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')

@@ -6,16 +6,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from create_bot import bot, logger
-from database.db_servers import get_all_servers
 from database.db_users import get_user_info
 from keyboards.inline_kbs import cancel_fsm_kb, main_inline_kb
-from keyboards.admin_keyboards import admin_actions_kb, target_for_spam_kb, add_del_promo_kb, select_server_location_kb, \
-    add_server_kb, check_server_again_kb, add_days_sub_kb
-from database.db_admin import add_promo, del_promo, get_all_users, get_all_subscribers, get_country_by_id, \
-    get_countries, get_country_by_code, add_server, extend_subscription
+from keyboards.admin_keyboards import admin_actions_kb, target_for_spam_kb, add_del_promo_kb, add_days_sub_kb
+from database.db_admin import add_promo, del_promo, get_all_users, get_all_subscribers, extend_subscription
 from lingo.template import MENU_TEXT
-from utils.ssh_utils import execute_outline_server, get_data_from_output
-from states.admin_states import Promo, SpamState, ServerActions, SubActions
+from states.admin_states import Promo, SpamState, SubActions
+from utils.remna_api import bulk_extend_all_users
 
 admin_router = Router()
 
@@ -30,9 +27,6 @@ async def delete_messages(event: Union[Message, CallbackQuery], count: int = 1):
     except Exception as e:
         logger.error(f'Error of deleting message: {e}')
 
-class AddServerState(StatesGroup):
-    waiting_for_server_data = State()
-    store_data_for_execute = State()
 
 @admin_router.callback_query(F.data == 'cancel_fsm')
 async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
@@ -212,8 +206,24 @@ async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
         user_id = data.get('user_id')
         days = data.get('days')
         print(data)
-        result = await extend_subscription(days, user_id)
-        await delete_messages(call)
+        result = await extend_subscription(days, user_id) # Прибавляет дни только в БД
+
+        try:
+
+            result = await bulk_extend_all_users(extend_days=days)
+
+            await call.message.answer(
+                "✅ Всем пользователям продлено на 30 дней"
+            )
+
+        except Exception as e:
+
+            print(e)
+
+            await call.message.answer(
+                "❌ Ошибка при продлении пользователей"
+            )
+
         await call.message.answer(f'Функция отработала.\n'
                                   f'Обновлено строк: {result}', reply_markup=await main_inline_kb(call.from_user.id))
         await state.clear()
@@ -260,173 +270,3 @@ async def add_or_del_promo(call: CallbackQuery, state: FSMContext):
         await call.message.answer(f'Промокод "{promo_code}" удален')
         await state.clear()
         await call.message.answer('Возврат в меню.', reply_markup=await main_inline_kb(call.from_user.id))
-
-
-#####################################################################################################################
-
-################################################ Блок взаимодействия с серверами ####################################
-
-@admin_router.callback_query(F.data == 'check_server')
-async def check_server(call: CallbackQuery):
-    servers = await get_all_servers()
-
-    if not servers:
-        await call.message.answer('У вас нет добавленных серверов')
-        return
-    text_to_print = []
-
-    for server in servers:
-        server_id = server['server_id']
-        country_id = server['country_id']
-        server_ip = server['server_ip']
-        active_users = server['active_users']
-        max_users = server['max_users']
-
-        country = await get_country_by_id(country_id)
-        country_name = country['name']
-
-        text_to_print.append(f'<b>ID</b>: {server_id}\n<b>Страна</b>: {country_name}\n<b>IP</b>: {server_ip}\n<b>Пользователи</b>: {active_users}/{max_users}')
-
-    full_text = '\n\n'.join(text_to_print)
-
-    if len(full_text) < 4096:
-        try:
-            await call.message.edit_text(full_text, reply_markup=check_server_again_kb())
-            return
-        except Exception as e:
-            logger.error(f'Error in check_server: {e}')
-            await delete_messages(call)
-            await call.message.answer(full_text, reply_markup=check_server_again_kb())
-
-
-    else:
-        for i in range(0, len(full_text), 4096):
-            await call.message.answer(full_text[i:i + 4096], reply_markup=check_server_again_kb())
-
-
-@admin_router.callback_query(F.data == 'add_server')
-async def add_server_func(call: CallbackQuery, state: FSMContext):
-    await delete_messages(call)
-    await call.message.answer('Отправьте данные от сервера в формате: ip///user///password\n'
-                              'Пример: 192.168.19.1///root///uJ1Ps0?a8MN', reply_markup=cancel_fsm_kb())
-    await state.set_state(ServerActions.add_server)
-
-@admin_router.message(ServerActions.add_server)
-async def process_server_data(message: Message, state: FSMContext):
-    server_data = message.text
-    await delete_messages(message, 2)
-    try:
-        countries = await get_countries()
-        ip, user, password = server_data.split('///')
-        await state.update_data(ip=ip, user=user, password=password)
-        await message.answer(f"Данные сервера:\nIP: {ip}\nUser: {user}\nPassword: {password}\n"
-                             f"\nЕсли данные верны - выберите страну расположения сервера",
-                             reply_markup=select_server_location_kb(countries))
-        await state.set_state(ServerActions.select_country)
-    except ValueError:
-        await message.answer('Некорректный формат ввода, попробуйте ещё раз.')
-
-
-@admin_router.callback_query(ServerActions.select_country)
-async def select_server_location(call: CallbackQuery, state: FSMContext):
-
-    await delete_messages(call)
-    server_data = await state.get_data()
-    ip = server_data.get('ip')
-    user = server_data.get('user')
-    password = server_data.get('password')
-
-    country_code = call.data.split('_')[-1]
-    country_row = await get_country_by_code(country_code)
-    country_id = country_row['id']
-    country_name = country_row['name']
-    await state.update_data(country_id=country_id, country_name=country_name, country_code=country_code)
-
-    await call.message.answer(f"Данные сервера:\nIP: {ip}\nUser: {user}\nPassword: {password}\n"
-                              f"Страна: {country_name}\n"
-                              f"\nЕсли данные верны - введите максимальное количество "
-                              f"пользователей для данного сервера\n"
-                              "<b>Примерная формула: {скорость} / 4</b>\n"
-                              "Пример: скорость сервера 300мБит/сек, 300 / 4 = 75\n"
-                              "Значит максимальное кол-во пользователей = ~75",
-                         reply_markup=cancel_fsm_kb())
-    await state.set_state(ServerActions.input_max_users)
-
-@admin_router.message(ServerActions.input_max_users)
-async def input_max_users(message: Message|CallbackQuery, state: FSMContext):
-    if message.text.isdigit():
-        max_users = int(message.text)
-        await state.update_data(max_users=max_users)
-        server_data = await state.get_data()
-        country_name = server_data.get('country_name')
-        ip = server_data.get('ip')
-        user = server_data.get('user')
-        password = server_data.get('password')
-        await delete_messages(message, 2)
-
-        await message.answer(f"Данные сервера:\nIP: {ip}\nUser: {user}\nPassword: {password}\n"
-                             f"Страна: {country_name}\n"
-                             f"Макс. пользователей: {max_users}\n"
-                             f"\nЕсли данные верны - нажмите на кнопку.",
-                             reply_markup=add_server_kb())
-        await state.set_state(ServerActions.setup_new_server)
-
-    else:
-        await delete_messages(message, 2)
-        await message.answer('Введите ЧИСЛО')
-
-
-@admin_router.callback_query(ServerActions.setup_new_server)
-async def execute_server(call: CallbackQuery, state: FSMContext):
-    await delete_messages(call)
-    data = await state.get_data()
-    country_id = int(data.get('country_id'))
-    ip = data.get('ip')
-    user = data.get('user')
-    password = data.get('password')
-    max_users = int(data.get('max_users'))
-
-    try:
-        await call.message.answer('Запуск функции установки Outline...\n'
-                                  '<b>!!!ВАЖНО!!!</b>\n'
-                                  'Ничего не нажимайте\n'
-                                  'Примерное время установки: ~3 минуты\n'
-                                  'По окончанию установки вы получите сообщение.')
-
-        output, errors = await execute_outline_server(host=ip, user=user, password=password)
-
-        if errors:
-            await call.message.answer(f'При выполнении произошли следующие ошибки:\n'
-                                 f'\n{errors}', reply_markup=await main_inline_kb(call.from_user.id))
-            await state.clear()
-            return
-
-        if output:
-            try:
-                all_output, api_url, cert_sha256, management_port, access_key_port = get_data_from_output(output)
-                logger.info(f'get_data_from_output (admin_handlers, 315):\n'
-                            f'{all_output}\n'
-                            f'{api_url}\n'
-                            f'{cert_sha256}\n'
-                            f'{management_port}\n'
-                            f'{access_key_port}')
-                await add_server(country_id, ip, password, api_url, cert_sha256, True, 0,
-                                 max_users, access_key_port, management_port)
-
-                await call.message.answer('Функция отработала.\n'
-                                     f'Весь вывод: <code>{all_output[0]}</code> (нажмите, чтобы скопировать)\n'
-                                     f'\napi_url={api_url}\n'
-                                     f'cert_sha256={cert_sha256}\n'
-                                     f'management_port={management_port}\n'
-                                     f'access_key_port={access_key_port}')
-
-                await state.clear()
-
-            except Exception as e:
-                await call.answer('Произошла ошибка при выполнении функции get_data_from_output:\n'
-                                     f'Error: {str(e)}')
-                await state.clear()
-
-
-    except Exception as e:
-        await call.answer(f'Произошла ошибка: {e}')

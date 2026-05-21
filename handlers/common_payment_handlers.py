@@ -5,15 +5,13 @@ from aiogram.types import CallbackQuery, Message, Union
 from decouple import config
 
 from create_bot import bot, logger
-from database.db_admin import get_country_by_id
-from database.db_servers import get_server_by_id, get_server_with_min_user_ratio_by_country
 from database.db_users import get_user_info
 from handlers.start import create_user_if_not_exist
 from states.payment_states import Buy
 from keyboards.inline_kbs import main_inline_kb
-from keyboards.payment_keyboards import server_select_kb, select_time_kb, select_payment_system_kb, skip_email_kb, \
+from keyboards.payment_keyboards import select_time_kb, select_payment_system_kb, skip_email_kb, \
      accept_or_not_kb
-from lingo.template import SERVER_SELECT, EXTEND_SUBSCRIPTION, TIME_SELECT, SUBSCRIPTION_OPTIONS, MENU_TEXT
+from lingo.template import EXTEND_SUBSCRIPTION, TIME_SELECT, SUBSCRIPTION_OPTIONS, MENU_TEXT
 
 payment_router = Router()
 
@@ -46,7 +44,7 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
 
 @payment_router.callback_query(F.data == 'buy')
 @payment_router.message(Command('buy'))
-async def server_select_handler(event: Message | CallbackQuery, state: FSMContext):
+async def time_select_handler(event: Message | CallbackQuery, state: FSMContext):
     await create_user_if_not_exist(event)
 
     current_state = await state.get_data()
@@ -54,57 +52,27 @@ async def server_select_handler(event: Message | CallbackQuery, state: FSMContex
         await state.clear()
 
     await delete_messages(event)
+
     user_data = await get_user_info(event.from_user.id)
 
     if user_data['is_subscriber'] is False:
-        await state.set_state(Buy.server_select)
-        await bot.send_photo(photo=config('SERVERS'), chat_id=event.from_user.id, caption=SERVER_SELECT, reply_markup=await server_select_kb())
-
+        caption = TIME_SELECT
     else:
-        await state.set_state(Buy.time_select)
-        server_id = user_data['server_id']
-        server_data = await get_server_by_id(server_id)
-        server_api = server_data['outline_url']
-        server_cert = server_data['outline_cert']
-        country_id = server_data['country_id']
-
-        country_data = await get_country_by_id(country_id)
-        country_name = country_data['name']
-
-        await state.update_data(server_id=server_id, country_name=country_name, country_id=country_id,
-                                server_api=server_api, server_cert=server_cert)
-
         end_subscribe = user_data['end_subscribe']
         formatted_data = end_subscribe.strftime('%d.%m.%Y')
-        await bot.send_photo(photo=config('SUB_TIME'), chat_id=event.from_user.id,
-                               caption=EXTEND_SUBSCRIPTION.format(end_subscription=formatted_data),
-                               reply_markup=select_time_kb())
+        caption = EXTEND_SUBSCRIPTION.format(end_subscription=formatted_data)
 
-
-@payment_router.callback_query(Buy.server_select)
-async def time_select_handler(call: CallbackQuery, state: FSMContext):
-    await delete_messages(call)
-
-    country_name = call.data.split('_')[0]
-    country_id = int(call.data.split('_')[1])
-    selected_server = await get_server_with_min_user_ratio_by_country(country_id)
-    server_id = selected_server['server_id']
-    server_api = selected_server['outline_url']
-    server_cert = selected_server['outline_cert']
+    await bot.send_photo(photo=config('SUB_TIME'), chat_id=event.from_user.id,
+                         caption=caption, reply_markup=select_time_kb())
 
     await state.set_state(Buy.time_select)
-    await state.update_data(server_id=server_id, country_name=country_name, country_id=country_id,
-                            server_api=server_api, server_cert=server_cert)
-
-    await call.message.answer_photo(photo=config('SUB_TIME'), caption=TIME_SELECT, reply_markup=select_time_kb())
 
 
 @payment_router.callback_query(Buy.time_select)
 async def payment_system_select_handler(call: CallbackQuery, state: FSMContext):
     await delete_messages(call)
     try:
-        data = await state.get_data()
-        country_name = data['country_name']
+        # data = await state.get_data()
         subscribe_idx = int(call.data.split(':')[1])
         sub_time = int(SUBSCRIPTION_OPTIONS[subscribe_idx]['label'].split()[0])  # В МЕСЯЦАХ
         price = int(SUBSCRIPTION_OPTIONS[subscribe_idx]['price'])
@@ -112,7 +80,6 @@ async def payment_system_select_handler(call: CallbackQuery, state: FSMContext):
 
         await call.message.answer_photo(photo=config('PAYMENT_METHOD'),
                                         caption=f'Вы выбрали:\n'
-                                      f'<b>{country_name}</b>\n'
                                       f'Длительность: <b>{sub_time} мес.</b>\n'
                                       '\nВыберите способ оплаты 👇', reply_markup=select_payment_system_kb())
 
@@ -120,7 +87,6 @@ async def payment_system_select_handler(call: CallbackQuery, state: FSMContext):
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {str(e)}\n'
-                     f'Content data: {data}\n'
                      f'Content call.data: {call.data}\n'
                      f'Content subscribe idx: {subscribe_idx}'
                      f'Content sub_time: {sub_time}\n')
@@ -142,7 +108,6 @@ async def confirm_payment_handler(call: CallbackQuery, state: FSMContext):
         12: 1500
     }
 
-    country_name = data['country_name']
     try:
         sub_time = data['sub_time']
         price = PRICE_DICT[sub_time]
@@ -156,7 +121,7 @@ async def confirm_payment_handler(call: CallbackQuery, state: FSMContext):
 
     await state.update_data(payment_method=payment_method)
     if payment_method in ['sbp', 'tinkoff_bank', 'sberbank', 'bank_card']:
-        await state.set_state(Buy.get_email_for_check)
+        await state.set_state(Buy.get_email_for_receipt)
         await call.message.answer('Последний шаг!\n'
                                   'Отправьте e-mail для получения чека после оплаты\n'
                                   'Если чек не нужен - нажмите кнопку "пропустить"',
@@ -164,17 +129,7 @@ async def confirm_payment_handler(call: CallbackQuery, state: FSMContext):
     elif payment_method == 'stars':
         await state.set_state(Buy.confirm_payment_stars)
         await call.message.answer(f'Вы выбрали:\n'
-                                   f'Страна: <b>{country_name}</b>\n'
                                    f'Длительность: <b>{sub_time} мес.</b>\n'
                                    f'Метод оплаты: <b>Telegram Stars</b>\n'
                                    f'\nК оплате: {int(price)} {'⭐️'} \n',
                                    reply_markup=accept_or_not_kb())
-    elif payment_method == 'crypto_payment':
-        await state.set_state(Buy.confirm_payment_crypto)
-        await call.message.answer(f'Вы выбрали:\n'
-                                   f'Страна: <b>{country_name}</b>\n'
-                                   f'Длительность: <b>{sub_time} мес.</b>\n'
-                                   f'Метод оплаты: <b>Криптовалюта</b>\n'
-                                   f'\nК оплате: {int(price)}₽ (в крипте)\n',
-                                   reply_markup=accept_or_not_kb())
-

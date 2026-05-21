@@ -6,17 +6,16 @@ from aiogram.types import CallbackQuery, Message, Union
 from decouple import config
 
 from create_bot import bot, logger
-from database.db_servers import edit_server_active_users_count
-from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_vpn_key, \
+from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_sub_link, \
     set_for_subscribe, extension_subscribe, send_reward_to_referrer
-from handlers.start import hysteria_country
-from keyboards.inline_kbs import main_inline_kb, apps_kb
+from keyboards.inline_kbs import main_inline_kb
 from lingo.template import MENU_TEXT
-from outline.main import OutlineConnection
 from payment.yookassa_api import create_payment, check_status
 from states.payment_states import Buy
 
 from keyboards.payment_keyboards import accept_or_not_kb, pay_kb, payed_kb
+
+from utils.remna_api import get_or_create_subscription, update_user
 
 ruble_payment_router = Router()
 
@@ -59,7 +58,7 @@ async def cancel_fsm_handler(call: CallbackQuery, state: FSMContext):
 
 ################################################ Блок покупки #######################################################
 
-@ruble_payment_router.callback_query(Buy.get_email_for_check)
+@ruble_payment_router.callback_query(Buy.get_email_for_receipt)
 async def get_email_handler(event: Message | CallbackQuery, state: FSMContext):
     if isinstance(event, Message):
         email = event.text
@@ -76,14 +75,12 @@ async def get_email_handler(event: Message | CallbackQuery, state: FSMContext):
 
     data = await state.get_data()
     payment_method = data['payment_method']
-    country_name = data['country_name']
     sub_time = data['sub_time']
     price = data['price']
 
     await state.set_state(Buy.confirm_payment_ruble)
 
     await event.message.answer(f'Вы выбрали:\n'
-                               f'Страна: <b>{country_name}</b>\n'
                                f'Длительность: <b>{sub_time} мес.</b>\n'
                                f'Метод оплаты: {method_name[payment_method]}\n'
                                f'\nК оплате: {int(price)} ₽',
@@ -96,7 +93,6 @@ async def ruble_pay_handler(call: CallbackQuery, state: FSMContext):
     if call.data == 'accept':
 
         data = await state.get_data()
-        country_name = data['country_name']
         sub_time = data['sub_time']
         price = int(data['price'])
         payment_method = data['payment_method']
@@ -108,8 +104,7 @@ async def ruble_pay_handler(call: CallbackQuery, state: FSMContext):
             payment_url, payment_id = create_payment(payment_method, price)
 
         await state.update_data(payment_id=payment_id, payment_url=payment_url)
-        message = await call.message.answer(f'Страна: <b>{country_name}</b>\n'
-                                            f'Длительность: <b>{sub_time} мес.</b>\n'
+        message = await call.message.answer(f'Длительность: <b>{sub_time} мес.</b>\n'
                                             f'\nК оплате: {int(price)} рублей\n'
                                             '\nНажмите кнопку для оплаты 👇\n'
                                             '(Время действия ссылки - 10 минут)',
@@ -133,6 +128,7 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
     user_data = await get_user_info(call.from_user.id)
     is_subscriber = user_data['is_subscriber']
+    remna_uuid = user_data['remna_uuid']
 
     if call.data == 'payed':
         data = await state.get_data()
@@ -157,25 +153,14 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
             if is_subscriber is False:
                 try:
-                    server_id = data['server_id']
-                    server_api = data['server_api']
-                    server_cert = data['server_cert']
-
-                    client = OutlineConnection(server_api, server_cert)
-                    key = client.create_new_key(str(call.from_user.id), call.from_user.username if call.from_user.username else str(call.from_user.id)).access_url
-                    hysteria_token = secrets.token_urlsafe(16)
-
-                    await set_user_vpn_key(call.from_user.id, key, hysteria_token, server_id)
-                    await set_for_subscribe(call.from_user.id, sub_time * 31, server_id)
-                    await edit_server_active_users_count(server_id, 'add')
+                    sub_link = await get_or_create_subscription(call.from_user.id, sub_time * 31)
+                    await set_user_sub_link(call.from_user.id, sub_link)
+                    await set_for_subscribe(call.from_user.id, sub_time * 31)
 
                     await call.message.answer_photo(photo=config('CONGRATS'),
                                                     caption='Спасибо за покупку!\n'
-                                                  f'Ваш ключ Outline: <code>{key}</code>\n'
-                                                  f'Ваша ссылка для протокола Hysteria2: <code>hysteria2://{hysteria_token}@{hysteria_country[server_id]}.dudevpn.me:443</code>'
-
-                                                  f'\nВыберите свою платформу для скачивания приложения',
-                                                  reply_markup=apps_kb())
+                                                    f'Ваша ссылка на подписку и инструкцию: {sub_link}'
+                                                    f'Для перехода в главное меню нажмите /start')
                     await state.clear()
 
                 except Exception as e:
@@ -183,6 +168,7 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
             else:
                 await extension_subscribe(call.from_user.id, sub_time * 31)
+                await get_or_create_subscription(call.from_user.id, sub_time * 31)
                 await call.message.answer_photo(photo=config('CONGRATS'),
                                                 caption='Спасибо за продление подписки!\n'
                                               'Мы стараемся для Вас ❤️\n'

@@ -13,12 +13,10 @@ async def create_table_if_not_exist():
             'users': '''
             CREATE TABLE IF NOT EXISTS users(
                 user_id BIGINT PRIMARY KEY,
-                name TEXT,
+                name TEXT, 
                 is_admin bool DEFAULT FALSE,
-                is_subscriber bool DEFAULT FALSE,
-                vpn_key TEXT DEFAULT NULL,
-                hysteria_token TEXT DEFAULT NULL,
-                server_id INT2 DEFAULT NULL,
+                is_subscriber bool DEFAULT FALSE, 
+                sub_link TEXT DEFAULT NULL,
                 start_subscribe DATE DEFAULT NULL,
                 end_subscribe DATE DEFAULT NULL,
                 trial_used BOOLEAN DEFAULT FALSE
@@ -28,63 +26,6 @@ async def create_table_if_not_exist():
             CREATE TABLE IF NOT EXISTS promo_codes(
                 promo_code TEXT,
                 duration INT4)
-            ''',
-
-            'servers': '''
-            CREATE TABLE IF NOT EXISTS servers(
-                server_id SERIAL PRIMARY KEY,
-                country_id INT2,
-                server_ip VARCHAR,
-                server_password VARCHAR,
-                outline_url VARCHAR,
-                outline_cert VARCHAR,
-                is_active BOOLEAN DEFAULT TRUE,
-                active_users INT4 DEFAULT 0,
-                max_users INT4,
-                vless_port INT4,
-                manager_port INT4)
-                ''',
-
-            'countries': '''
-            CREATE TABLE IF NOT EXISTS countries (
-            id SERIAL PRIMARY KEY,
-            code VARCHAR(3),
-            name VARCHAR(255)
-            );
-
-            INSERT INTO countries (code, name) VALUES
-            ('HU', '🇭🇺 Венгрия'),
-            ('IL', '🇮🇱 Израиль'),
-            ('UK', '🇬🇧 Англия'),
-            ('DE', '🇩🇪 Германия'),
-            ('PL', '🇵🇱 Польша'),
-            ('USA', '🇺🇸 США'),
-            ('FR', '🇫🇷 Франция'),
-            ('CA', '🇨🇦 Канада'),
-            ('KZ', '🇰🇿 Казахстан'),
-            ('ES', '🇪🇸 Испания'),
-            ('SE', '🇸🇪 Швеция'),
-            ('PT', '🇵🇹 Португалия'),
-            ('MD', '🇲🇩 Молдова'),
-            ('LV', '🇱🇻 Латвия'),
-            ('FI', '🇫🇮 Финляндия'),
-            ('RU', '🇷🇺 Россия'),
-            ('JP', '🇯🇵 Япония'),
-            ('RO', '🇷🇴 Румыния'),
-            ('AE', '🇦🇪 ОАЭ'),
-            ('SG', '🇸🇬 Сингапур'),
-            ('TR', '🇹🇷 Турция'),
-            ('CZE', '🇨🇿 Чехия'),
-            ('AU', '🇦🇺 Австралия'),
-            ('ZA', '🇿🇦 ЮАР'),
-            ('KR', '🇰🇷 Южная Корея'),
-            ('AT', '🇦🇹 Австрия'),
-            ('MX', '🇲🇽 Мексика'),
-            ('DK', '🇩🇰 Дания'),
-            ('IN', '🇮🇳 Индия'),
-            ('NL', '🇳🇱 Нидерланды'),
-            ('AR', '🇦🇷 Аргентина')
-            ON CONFLICT DO NOTHING;
             ''',
 
             'referral_system': '''

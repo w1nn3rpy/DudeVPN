@@ -30,22 +30,6 @@ def add_del_promo_kb():
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
-def add_server_kb():
-    inline_kb = [
-        [InlineKeyboardButton(text='➕ Добавить сервер', callback_data='setup_new_server')],
-        [InlineKeyboardButton(text='❌ Отменить', callback_data='cancel_fsm')]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
-
-def select_server_location_kb(rows):
-    builder = InlineKeyboardBuilder()
-    for row in rows:
-        country_code, country_name = row['code'], row['name']
-        builder.button(text=country_name, callback_data=f'server-location_{country_code}')
-    builder.adjust(3)
-    builder.row(InlineKeyboardButton(text='❌ Отмена', callback_data='cancel_fsm'))
-
-    return builder.as_markup()
 
 def target_for_spam_kb():
     inline_kb = [

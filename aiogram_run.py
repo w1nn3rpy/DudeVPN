@@ -2,7 +2,6 @@ import asyncio
 
 from create_bot import bot, dp, logger
 from handlers.admin_handlers import admin_router
-from handlers.crypto_payment_handlers import crypto_payment_router
 from handlers.start import start_router, set_commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger

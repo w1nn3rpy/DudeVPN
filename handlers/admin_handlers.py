@@ -213,7 +213,7 @@ async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
             result = await bulk_extend_all_users(extend_days=days)
 
             await call.message.answer(
-                "✅ Всем пользователям продлено на 30 дней"
+                f"✅ {'Всем пользователям' if user_id is None else 'Указанному пользователю'} подписка продлена на {days} дней"
             )
 
         except Exception as e:

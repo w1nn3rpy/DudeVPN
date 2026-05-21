@@ -26,7 +26,6 @@ async def main():
     dp.include_router(payment_router)
     dp.include_router(ruble_payment_router)
     dp.include_router(stars_payment_router)
-    dp.include_router(crypto_payment_router)
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands()
     await dp.start_polling(bot)

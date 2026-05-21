@@ -224,13 +224,16 @@ async def promo_handler(message: Message, state: FSMContext):
             try:
                 await set_for_subscribe(message.from_user.id, int(duration))
 
-                sub_link = await get_or_create_subscription(message.from_user.id, int(duration))
-                await set_user_sub_link(message.from_user.id, sub_link)
+                result = await get_or_create_subscription(message.from_user.id, int(duration))
+                sub_link = result['sub_url']
+                uuid = result['uuid']
+                await set_user_sub_link(message.from_user.id, sub_link, uuid)
 
                 await message.answer_photo(photo=config('CONGRATS'),
                                            caption=f'Промокод {promo_code} активирован! 🔥\n'
                                                    f'Вам предоставлен доступ на {duration} дней.\n\n'
-                                                   f'Ваша ссылка на подписку и инструкцию: {sub_link}'
+                                                   f'Ваша ссылка на подписку и инструкцию:\n\n'
+                                                   f'{sub_link}\n\n'
                                                    f'Для перехода в главное меню нажмите /start',
                                            )
                 await state.clear()
@@ -300,10 +303,13 @@ async def get_trial_key(call: CallbackQuery, state: FSMContext):
     on_time = call.data.split('_')[1]
 
     # TODO создание юзера в панели с подпиской на "on_time" срок. Получение ссылки в переменную sub_link
-    sub_link = await get_or_create_subscription(call.from_user.id, int(on_time))
-    await set_user_sub_link(call.from_user.id, sub_link)
+    result = await get_or_create_subscription(call.from_user.id, int(on_time))
+    sub_link = result['sub_url']
+    uuid = result['uuid']
+    await set_user_sub_link(call.from_user.id, sub_link, uuid)
     await set_for_trial_subscribe(call.from_user.id, on_time)
 
-    await call.message.answer(f'🎉 Ваша ссылка на подписку и инструкцию: {sub_link} 🎉\n'
+    await call.message.answer(f'🎉 Ваша ссылка на подписку и инструкцию 🎉:\n\n'
+                              f'{sub_link}\n\n'
                               f'Для перехода в главное меню нажмите /start')
     await state.clear()

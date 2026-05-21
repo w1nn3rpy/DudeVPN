@@ -88,13 +88,19 @@ async def get_or_create_subscription(
 
         updated_data = updated.get("response", updated)
 
-        return updated_data.get("subscriptionUrl")
+        return {
+            "uuid": uuid,
+            "sub_url": updated_data.get("subscriptionUrl")
+        }
 
     created = await create_user(telegram_id, days)
 
     created_data = created.get("response", created)
 
-    return created_data.get("subscriptionUrl")
+    return {
+        "uuid": created_data.get("uuid"),
+        "sub_url": created_data.get("subscriptionUrl")
+    }
 
 async def bulk_extend_all_users(
     extend_days: int,

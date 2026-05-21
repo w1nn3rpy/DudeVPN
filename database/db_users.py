@@ -285,17 +285,18 @@ async def set_for_unsubscribe(user_id):
             await con.close()
 
 
-async def set_user_sub_link(user_id, sub_link: str):
+async def set_user_sub_link(user_id, sub_link: str, uuid):
     con = None
     try:
         con = await asyncpg.connect(DB_URL)
         query = '''
         UPDATE users 
-        SET sub_link = $1
-        WHERE user_id = $2
+        SET sub_link = $1,
+        remna_uuid = $2
+        WHERE user_id = $3
         '''
 
-        await con.execute(query, sub_link, user_id)
+        await con.execute(query, sub_link, uuid, user_id)
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')

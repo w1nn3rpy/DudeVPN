@@ -128,7 +128,6 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
     user_data = await get_user_info(call.from_user.id)
     is_subscriber = user_data['is_subscriber']
-    remna_uuid = user_data['remna_uuid']
 
     if call.data == 'payed':
         data = await state.get_data()
@@ -153,13 +152,16 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
             if is_subscriber is False:
                 try:
-                    sub_link = await get_or_create_subscription(call.from_user.id, sub_time * 31)
-                    await set_user_sub_link(call.from_user.id, sub_link)
+                    result = await get_or_create_subscription(call.from_user.id, sub_time * 31)
+                    sub_link = result['sub_url']
+                    uuid = result['uuid']
+                    await set_user_sub_link(call.from_user.id, sub_link, uuid)
                     await set_for_subscribe(call.from_user.id, sub_time * 31)
 
                     await call.message.answer_photo(photo=config('CONGRATS'),
-                                                    caption='Спасибо за покупку!\n'
-                                                    f'Ваша ссылка на подписку и инструкцию: {sub_link}'
+                                                    caption='🎉 Спасибо за покупку! 🎉\n'
+                                                    f'Ваша ссылка на подписку и инструкцию:\n\n'
+                                                    f'{sub_link}\n\n'
                                                     f'Для перехода в главное меню нажмите /start')
                     await state.clear()
 

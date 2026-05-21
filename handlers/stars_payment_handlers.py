@@ -79,13 +79,16 @@ async def successful_payment_handler(message: Message, state: FSMContext):
 
         if is_subscriber is False:
             try:
-                sub_link = await get_or_create_subscription(user_id, int(duration) * 31)
-                await set_user_sub_link(user_id, sub_link)
+                result = await get_or_create_subscription(user_id, int(duration) * 31)
+                sub_link = result['sub_url']
+                uuid = result['uuid']
+                await set_user_sub_link(user_id, sub_link, uuid)
                 await set_for_subscribe(user_id, int(duration) * 31)
 
                 await message.answer_photo(photo=config('CONGRATS'),
-                                                    caption='Спасибо за покупку!\n'
-                                                    f'Ваша ссылка на подписку и инструкцию: {sub_link}'
+                                                    caption='🎉 Спасибо за покупку! 🎉\n'
+                                                    f'Ваша ссылка на подписку и инструкцию:\n\n'
+                                                    f'{sub_link}\n\n'
                                                     f'Для перехода в главное меню нажмите /start')
                 await state.clear()
 

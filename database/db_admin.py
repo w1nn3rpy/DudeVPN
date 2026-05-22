@@ -88,3 +88,17 @@ async def extend_subscription(days: int, user_id: int | None = None):
 
     finally:
         await con.close()
+
+async def delete_user(user_id: int):
+    con = None
+    try:
+        con = await asyncpg.connect(DB_URL)
+        await con.execute(f'''
+            DELETE FROM users WHERE user_id = $1
+        ''', user_id)
+
+    except Exception as e:
+        logger.error(f'Error in {__name__}: {e}')
+
+    finally:
+        await con.close()

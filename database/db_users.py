@@ -332,7 +332,7 @@ async def check_end_subscribe():
         con = await asyncpg.connect(DB_URL)
 
         query_ended = """
-                SELECT user_id, vpn_key, server_id
+                SELECT user_id
                 FROM users
                 WHERE end_subscribe <= $1
                 """
@@ -465,6 +465,47 @@ async def extension_subscribe(user_id, amount_days: int):
         WHERE user_id = $2
         """
         await con.execute(set_query, new_end_subscribe, user_id)
+
+    except Exception as e:
+        logger.error(f'Error in {__name__}: {e}')
+
+    finally:
+        if con:
+            await con.close()
+
+
+async def create_invoice_db(payment_id,
+                            amount,
+                            currency,
+                            user_id):
+    con = None
+    try:
+        con = await asyncpg.connect(DB_URL)
+        query = '''
+        INSERT INTO payments(payment_id, amount, currency, user_id) 
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+        '''
+        await con.fetchval(query, payment_id, amount, currency, user_id)
+
+    except Exception as e:
+        logger.error(f'Error in {__name__}: {e}')
+
+    finally:
+        if con:
+            await con.close()
+
+async def update_invoice_db(serial_id):
+    con = None
+    try:
+        con = await asyncpg.connect(DB_URL)
+        query = '''
+        UPDATE payments
+        SET status = 'PAID',
+        paid_at = NOW()
+        WHERE id = $1
+        '''
+        await con.execute(query, serial_id)
 
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')

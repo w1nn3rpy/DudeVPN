@@ -4,15 +4,21 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, Union
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.exceptions import (
+    TelegramForbiddenError,
+    TelegramBadRequest,
+    TelegramNotFound,
+    TelegramRetryAfter
+)
 
 from create_bot import bot, logger
 from database.db_users import get_user_info
 from keyboards.inline_kbs import cancel_fsm_kb, main_inline_kb
 from keyboards.admin_keyboards import admin_actions_kb, target_for_spam_kb, add_del_promo_kb, add_days_sub_kb
-from database.db_admin import add_promo, del_promo, get_all_users, get_all_subscribers, extend_subscription
+from database.db_admin import add_promo, del_promo, get_all_users, get_all_subscribers, extend_subscription, delete_user
 from lingo.template import MENU_TEXT
 from states.admin_states import Promo, SpamState, SubActions
-from utils.remna_api import bulk_extend_all_users
+from utils.remna_api import bulk_extend_all_users, update_user, get_user_by_username
 
 admin_router = Router()
 
@@ -113,6 +119,25 @@ async def spam_message_handler(event: Message|CallbackQuery, state: FSMContext):
         await state.update_data(spam_type='text', message=text)
         await state.set_state(SpamState.process_spam)
 
+async def safe_send(user_id: int, method, *args, **kwargs) -> bool:
+    try:
+        await method(chat_id=user_id, *args, **kwargs)
+        return True
+
+    except TelegramRetryAfter as e:
+        await asyncio.sleep(e.retry_after)
+        logger.info(f"Sleeping for {e.retry_after} seconds")
+        return await safe_send(user_id, method, *args, **kwargs)
+
+    except (TelegramForbiddenError, TelegramBadRequest):
+        # 100% мёртвый пользователь
+        await delete_user(user_id)
+        logger.error(f"User {user_id} is dead, deleted from DB.")
+        return False
+
+    except Exception as e:
+        logger.error(f"Temporary error for {user_id}: {e}")
+        return False
 
 @admin_router.callback_query(SpamState.process_spam)
 async def spam_handler(call: CallbackQuery, state: FSMContext):
@@ -131,30 +156,35 @@ async def spam_handler(call: CallbackQuery, state: FSMContext):
         caption = data.get('caption')
         photo_id = data.get('photo_id')
         for user in users:
-            user_id = user['user_id']
-            try:
-                await asyncio.sleep(0.5)
-                await bot.send_photo(photo=photo_id, chat_id=user_id, caption=caption)
-                get_message_counter += 1
+            user_id = user["user_id"]
 
-            except Exception as e:
-                logger.error(f'Error when spam message with photo: {e}')
+            ok = await safe_send(
+                user_id,
+                bot.send_photo,
+                photo=photo_id,
+                caption=caption
+            )
+
+            if ok:
+                get_message_counter += 1
+            else:
                 error_message_counter += 1
-                continue
 
     elif spam_type == 'text':
         message = data.get('message')
         for user in users:
-            user_id = user['user_id']
-            try:
-                await asyncio.sleep(0.5)
-                await bot.send_message(chat_id=user_id, text=message)
-                get_message_counter += 1
+            user_id = user["user_id"]
 
-            except Exception as e:
-                logger.error(f'Error when spam text message: {e}')
+            ok = await safe_send(
+                user_id,
+                bot.send_message,
+                text=message
+            )
+
+            if ok:
+                get_message_counter += 1
+            else:
                 error_message_counter += 1
-                continue
 
     await call.message.answer('Рассылка завершена.\n'
                               f'Сообщение доставлено {get_message_counter} пользователям.\n'
@@ -209,8 +239,18 @@ async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
         result = await extend_subscription(days, user_id) # Прибавляет дни только в БД
 
         try:
+            if user_id is None:
+                await bulk_extend_all_users(extend_days=days)
+            else:
+                remna_user = f'tg_{user_id}'
+                user = await get_user_by_username(remna_user)
 
-            result = await bulk_extend_all_users(extend_days=days)
+                if user:
+                    user_data = user.get("response", user)
+
+                    uuid = user_data.get("uuid")
+
+                    updated = await update_user(uuid, days)
 
             await call.message.answer(
                 f"✅ {'Всем пользователям' if user_id is None else 'Указанному пользователю'} подписка продлена на {days} дней"
@@ -218,7 +258,7 @@ async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
 
         except Exception as e:
 
-            print(e)
+            logger.error(e)
 
             await call.message.answer(
                 "❌ Ошибка при продлении пользователей"

@@ -17,9 +17,22 @@ async def create_table_if_not_exist():
                 is_admin bool DEFAULT FALSE,
                 is_subscriber bool DEFAULT FALSE, 
                 sub_link TEXT DEFAULT NULL,
+                remna_uuid TEXT DEFAULT NULL,
                 start_subscribe DATE DEFAULT NULL,
                 end_subscribe DATE DEFAULT NULL,
                 trial_used BOOLEAN DEFAULT FALSE
+                )''',
+
+            'payments': '''
+            CREATE TABLE IF NOT EXISTS payments(
+            id SERIAL PRIMARY KEY,
+            payment_id TEXT DEFAULT NULL,
+            amount NUMERIC(12, 2) NOT NULL,
+            currency VARCHAR(10) NOT NULL DEFAULT 'RUB',
+            status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+            user_id BIGINT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            paid_at TIMESTAMPTZ DEFAULT NULL
                 )''',
 
             'promocodes': '''

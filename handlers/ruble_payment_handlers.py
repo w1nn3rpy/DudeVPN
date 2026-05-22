@@ -7,7 +7,7 @@ from decouple import config
 
 from create_bot import bot, logger
 from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_sub_link, \
-    set_for_subscribe, extension_subscribe, send_reward_to_referrer
+    set_for_subscribe, extension_subscribe, send_reward_to_referrer, create_invoice_db, update_invoice_db
 from keyboards.inline_kbs import main_inline_kb
 from lingo.template import MENU_TEXT
 from payment.yookassa_api import create_payment, check_status
@@ -15,7 +15,7 @@ from states.payment_states import Buy
 
 from keyboards.payment_keyboards import accept_or_not_kb, pay_kb, payed_kb
 
-from utils.remna_api import get_or_create_subscription, update_user
+from utils.remna_api import get_or_create_subscription
 
 ruble_payment_router = Router()
 
@@ -102,8 +102,12 @@ async def ruble_pay_handler(call: CallbackQuery, state: FSMContext):
             payment_url, payment_id = create_payment(payment_method, price, email)
         else:
             payment_url, payment_id = create_payment(payment_method, price)
+        try:
+            serial_id = await create_invoice_db(payment_id, price, 'RUB', call.from_user.id)
+        except Exception as e:
+            logger.error(f'Error in {__name__}: {e}')
 
-        await state.update_data(payment_id=payment_id, payment_url=payment_url)
+        await state.update_data(serial_id=serial_id, payment_id = payment_id, payment_url=payment_url)
         message = await call.message.answer(f'Длительность: <b>{sub_time} мес.</b>\n'
                                             f'\nК оплате: {int(price)} рублей\n'
                                             '\nНажмите кнопку для оплаты 👇\n'
@@ -133,9 +137,13 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
         data = await state.get_data()
         payment_id = data['payment_id']
         sub_time = data['sub_time']
+        serial_id = data['serial_id']
 
 
         if check_status(payment_id) is True:
+
+            await update_invoice_db(serial_id)
+
             await message_with_pay_link.delete()
             referral_data = await get_user_referral_system_by_id(call.from_user.id)
             invited_by_id = referral_data['invited_by_id']

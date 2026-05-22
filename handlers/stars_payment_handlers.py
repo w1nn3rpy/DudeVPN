@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LabeledPrice, CallbackQuery
 from decouple import config
 
-from database.db_users import get_user_info, set_user_sub_link, set_for_subscribe, extension_subscribe
+from database.db_users import get_user_info, set_user_sub_link, set_for_subscribe, extension_subscribe, \
+    create_invoice_db, update_invoice_db
 from handlers.start import delete_messages
 from keyboards.inline_kbs import main_inline_kb
 from lingo.template import MENU_TEXT
@@ -55,6 +56,8 @@ async def confirm_payment_stars_handler(call: CallbackQuery, state: FSMContext):
         await delete_messages(call)
         data = await state.get_data()
         duration = data['sub_time']
+        serial_id = await create_invoice_db(None, PRICE_DICT.get(duration), 'XTR', call.from_user.id)
+        await state.update_data(serial_id=serial_id)
         await send_invoice_handler(call.message, duration, PRICE_DICT.get(duration))
 
 ### Подтверждение приёма оплаты ###
@@ -73,6 +76,10 @@ async def successful_payment_handler(message: Message, state: FSMContext):
         is_subscriber = user_data['is_subscriber']
         user_id = message.from_user.id
         data = await state.get_data()
+
+        serial_id = data['serial_id']
+        await update_invoice_db(serial_id)
+
         duration = data['sub_time']
         await bot.send_message(chat_id=5983514379,
                                text='Поступила оплата в TG Stars')

@@ -1,24 +1,65 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
 from database.db_users import get_user_info
 
 
 async def main_inline_kb(user_id):
     user_info = await get_user_info(user_id)
+
     is_admin = user_info['is_admin']
     is_subscriber = user_info['is_subscriber']
     trial_used = user_info['trial_used']
-    kb_list = [
-            [InlineKeyboardButton(text=f'{"🚀 Купить VPN" if not is_subscriber else "🚀 Продлить VPN"}', callback_data='buy')],
-            [InlineKeyboardButton(text='✌️ О нашем VPN', callback_data='about'), InlineKeyboardButton(text='🆘 Техподдержка', url='tg://resolve?domain=dudevpn_supportbot')],
-            [InlineKeyboardButton(text="🔥 Ввести промокод", callback_data='promo'), InlineKeyboardButton(text='👑 Профиль', callback_data='profile')],
-            [InlineKeyboardButton(text='💵 Заработать с нами', callback_data='referral_system')]
 
-    ]
-    if not trial_used: kb_list.insert(0, [InlineKeyboardButton(text='🚀 Попробовать бесплатно', callback_data='trial')])
+    kb = InlineKeyboardBuilder()
 
-    if is_admin is True:
-        kb_list.append([InlineKeyboardButton(text='🔥 Админка', callback_data='admin_panel')])
-    return InlineKeyboardMarkup(inline_keyboard=kb_list)
+    # 🚀 1. Триал (если не использован)
+    if not trial_used:
+        kb.row(
+            InlineKeyboardButton(text='🚀 Попробовать бесплатно', callback_data='trial')
+        )
+
+    # 🔥 2. Купить / Продлить
+    kb.row(
+        InlineKeyboardButton(
+            text="🚀 Купить VPN" if not is_subscriber else "🚀 Продлить VPN",
+            callback_data="buy"
+        )
+    )
+
+    # 📱 3. MiniApp (только если есть подписка)
+    if is_subscriber:
+        kb.row(
+            InlineKeyboardButton(
+                text="📱 Моя подписка",
+                web_app=WebAppInfo(url="https://app.dudevpn.me")
+            )
+        )
+
+    # ℹ️ 4. Инфо + поддержка
+    kb.row(
+        InlineKeyboardButton(text='✌️ О нашем VPN', callback_data='about'),
+        InlineKeyboardButton(text='🆘 Техподдержка', url='https://t.me/dudevpn_supportbot')
+    )
+
+    # 🎯 5. Промо + профиль
+    kb.row(
+        InlineKeyboardButton(text="🔥 Ввести промокод", callback_data='promo'),
+        InlineKeyboardButton(text='👑 Профиль', callback_data='profile')
+    )
+
+    # 💰 6. Рефералка
+    kb.row(
+        InlineKeyboardButton(text='💵 Заработать с нами', callback_data='referral_system')
+    )
+
+    # 🔥 7. Админка
+    if is_admin:
+        kb.row(
+            InlineKeyboardButton(text='🔥 Админка', callback_data='admin_panel')
+        )
+
+    return kb.as_markup()
 
 
 def about_kb():

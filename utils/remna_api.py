@@ -24,6 +24,18 @@ async def get_user_by_username(username: str):
 
             return await resp.json()
 
+async def get_user_by_tg_id(telegram_id: str):
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
+        async with session.get(
+            f"{BASE_URL}/users/by-telegram-id/{telegram_id}"
+        ) as resp:
+
+            if resp.status == 404:
+                return None
+
+            return await resp.json()
+
+
 async def create_user(
     telegram_id: int,
     days: int = 2,
@@ -76,9 +88,8 @@ async def get_or_create_subscription(
     telegram_id: int,
     days: int = 2,
 ):
-    username = f"tg_{telegram_id}"
 
-    user = await get_user_by_username(username)
+    user = await get_user_by_tg_id(str(telegram_id))
 
     if user:
         user_data = user.get("response", user)

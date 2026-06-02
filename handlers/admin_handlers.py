@@ -18,7 +18,7 @@ from keyboards.admin_keyboards import admin_actions_kb, target_for_spam_kb, add_
 from database.db_admin import add_promo, del_promo, get_all_users, get_all_subscribers, extend_subscription, delete_user
 from lingo.template import MENU_TEXT
 from states.admin_states import Promo, SpamState, SubActions
-from utils.remna_api import bulk_extend_all_users, update_user, get_user_by_username
+from utils.remna_api import bulk_extend_all_users, update_user, get_user_by_username, get_user_by_tg_id
 
 admin_router = Router()
 
@@ -242,8 +242,7 @@ async def add_days_sub_func(call: CallbackQuery, state:FSMContext):
             if user_id is None:
                 await bulk_extend_all_users(extend_days=days)
             else:
-                remna_user = f'tg_{user_id}'
-                user = await get_user_by_username(remna_user)
+                user = await get_user_by_tg_id(str(user_id))
 
                 if user:
                     user_data = user.get("response", user)

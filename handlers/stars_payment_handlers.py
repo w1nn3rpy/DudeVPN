@@ -9,7 +9,7 @@ from decouple import config
 from database.db_users import get_user_info, set_user_sub_link, set_for_subscribe, extension_subscribe, \
     create_invoice_db, update_invoice_db
 from handlers.start import delete_messages
-from keyboards.inline_kbs import main_inline_kb
+from keyboards.inline_kbs import main_inline_kb, subscription_button
 from lingo.template import MENU_TEXT
 from states.payment_states import Buy
 from keyboards.payment_keyboards import stars_payment_keyboard
@@ -94,9 +94,10 @@ async def successful_payment_handler(message: Message, state: FSMContext):
 
                 await message.answer_photo(photo=config('CONGRATS'),
                                                     caption='🎉 Спасибо за покупку! 🎉\n'
-                                                    f'Ваша ссылка на подписку и инструкцию:\n\n'
-                                                    f'{sub_link}\n\n'
-                                                    f'Для перехода в главное меню нажмите /start')
+                                                    f'Ваша ссылка на подписку и инструкцию доступна по кнопке ниже',
+                                           reply_markup=subscription_button())
+
+                await message.answer(f'Для перехода в главное меню нажмите /start')
                 await state.clear()
 
             except Exception as e:

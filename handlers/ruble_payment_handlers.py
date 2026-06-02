@@ -8,7 +8,7 @@ from decouple import config
 from create_bot import bot, logger
 from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_sub_link, \
     set_for_subscribe, extension_subscribe, send_reward_to_referrer, create_invoice_db, update_invoice_db
-from keyboards.inline_kbs import main_inline_kb
+from keyboards.inline_kbs import main_inline_kb, subscription_button
 from lingo.template import MENU_TEXT
 from payment.yookassa_api import create_payment, check_status
 from states.payment_states import Buy
@@ -168,9 +168,9 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
 
                     await call.message.answer_photo(photo=config('CONGRATS'),
                                                     caption='🎉 Спасибо за покупку! 🎉\n'
-                                                    f'Ваша ссылка на подписку и инструкцию:\n\n'
-                                                    f'{sub_link}\n\n'
-                                                    f'Для перехода в главное меню нажмите /start')
+                                                    f'Ваша ссылка на подписку и инструкцию доступна по кнопке ниже',
+                                                    reply_markup=subscription_button())
+                    await call.message.answer(f'Для перехода в главное меню нажмите /start')
                     await state.clear()
 
                 except Exception as e:

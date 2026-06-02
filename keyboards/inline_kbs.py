@@ -106,3 +106,11 @@ def return_home_kb():
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
+def subscription_button():
+    inline_kb = [
+        [InlineKeyboardButton(
+            text="📱 Моя подписка",
+            web_app=WebAppInfo(url="https://app.dudevpn.me")
+        )]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)

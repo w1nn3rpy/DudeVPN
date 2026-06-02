@@ -7,7 +7,8 @@ from aiogram.utils.deep_linking import create_start_link, decode_payload
 from datetime import datetime
 import secrets
 
-from keyboards.inline_kbs import main_inline_kb, about_kb, profile_kb, profile_sub_kb, cancel_fsm_kb, referral_kb
+from keyboards.inline_kbs import main_inline_kb, about_kb, profile_kb, profile_sub_kb, cancel_fsm_kb, referral_kb, \
+    subscription_button
 from keyboards.payment_keyboards import get_link_kb
 from database.db_users import get_user_info, new_user, new_user_in_referral_system, \
     update_username, get_user_referral_system_by_id, set_user_sub_link, set_for_subscribe, \
@@ -232,10 +233,9 @@ async def promo_handler(message: Message, state: FSMContext):
                 await message.answer_photo(photo=config('CONGRATS'),
                                            caption=f'Промокод {promo_code} активирован! 🔥\n'
                                                    f'Вам предоставлен доступ на {duration} дней.\n\n'
-                                                   f'Ваша ссылка на подписку и инструкцию:\n\n'
-                                                   f'{sub_link}\n\n'
-                                                   f'Для перехода в главное меню нажмите /start',
-                                           )
+                                                   f'Ваша ссылка на подписку и инструкцию доступна по кнопке ниже',
+                                           reply_markup=subscription_button())
+                await message.ansawer(f'Для перехода в главное меню нажмите /start')
                 await state.clear()
 
             except Exception as e:
@@ -309,7 +309,6 @@ async def get_trial_key(call: CallbackQuery, state: FSMContext):
     await set_user_sub_link(call.from_user.id, sub_link, uuid)
     await set_for_trial_subscribe(call.from_user.id, on_time)
 
-    await call.message.answer(f'🎉 Ваша ссылка на подписку и инструкцию 🎉:\n\n'
-                              f'{sub_link}\n\n'
-                              f'Для перехода в главное меню нажмите /start')
+    await call.message.answer(f'🎉 Ваша ссылка на подписку и инструкцию 🎉', reply_markup=subscription_button())
+    await call.message.answer(f'Для перехода в главное меню нажмите /start')
     await state.clear()

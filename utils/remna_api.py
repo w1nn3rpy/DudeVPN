@@ -38,6 +38,7 @@ async def create_user(
         "username": username,
         "expireAt": expire_at,
         "status": "ACTIVE",
+        "telegramId": telegram_id,
         "activeInternalSquads": [SQUAD_UUID]
     }
 

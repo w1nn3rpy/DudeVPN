@@ -486,8 +486,8 @@ async def create_invoice_db(payment_id,
         VALUES ($1, $2, $3, $4)
         RETURNING id
         '''
-        await con.fetchval(query, payment_id, amount, currency, user_id)
-
+        serial_id = await con.fetchval(query, payment_id, amount, currency, user_id)
+        return serial_id
     except Exception as e:
         logger.error(f'Error in {__name__}: {e}')
 

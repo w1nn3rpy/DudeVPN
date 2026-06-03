@@ -72,13 +72,14 @@ async def update_user(
     ).isoformat()
 
     payload = {
+        "uuid": uuid,
         "expireAt": expire_at,
         "status": "ACTIVE"
     }
 
     async with aiohttp.ClientSession(headers=HEADERS) as session:
         async with session.patch(
-            f"{BASE_URL}/users/{uuid}",
+            f"{BASE_URL}/users",
             json=payload
         ) as resp:
 
@@ -90,11 +91,9 @@ async def get_or_create_subscription(
 ):
 
     user = await get_user_by_tg_id(str(telegram_id))
-
     if user:
         user_data = user.get("response", user)
-
-        uuid = user_data.get("uuid")
+        uuid = user_data[0].get("uuid")
 
         updated = await update_user(uuid, days)
 

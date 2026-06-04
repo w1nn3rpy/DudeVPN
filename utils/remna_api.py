@@ -30,7 +30,7 @@ async def get_user_by_tg_id(telegram_id: str):
             f"{BASE_URL}/users/by-telegram-id/{telegram_id}"
         ) as resp:
 
-            if resp.status == 404:
+            if resp.status != 200:
                 return None
 
             return await resp.json()

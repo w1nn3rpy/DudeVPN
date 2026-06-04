@@ -35,7 +35,7 @@ async def create_table_if_not_exist():
             paid_at TIMESTAMPTZ DEFAULT NULL
                 )''',
 
-            'promocodes': '''
+            'promo_codes': '''
             CREATE TABLE IF NOT EXISTS promo_codes(
                 promo_code TEXT,
                 duration INT4)

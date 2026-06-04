@@ -31,8 +31,11 @@ async def get_user_by_tg_id(telegram_id: str):
         ) as resp:
 
             if resp.status != 200:
+                print('if resp.status != 200:', resp.status)
+                print('data there: ', await resp.text())
                 return None
-
+            print('if resp.status == 200:', resp.status)
+            print('data there: ', await resp.text())
             return await resp.json()
 
 
@@ -93,6 +96,7 @@ async def get_or_create_subscription(
     user = await get_user_by_tg_id(str(telegram_id))
     if user:
         user_data = user.get("response", user)
+        print('user_data: ', user_data)
         uuid = user_data[0].get("uuid")
 
         updated = await update_user(uuid, days)

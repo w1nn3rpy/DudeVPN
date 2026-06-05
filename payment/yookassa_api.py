@@ -5,6 +5,7 @@ import uuid
 Configuration.account_id = config('YOOKASSA_ID')
 Configuration.secret_key = config('YOOKASSA_TOKEN')
 
+#TODO разделение на Алисин АПИ и мой
 
 def create_payment(method: str, price: int, email: str = 'l33s4@mail.ru'):
     """
@@ -15,6 +16,14 @@ def create_payment(method: str, price: int, email: str = 'l33s4@mail.ru'):
     :return: Объект платежа
     """
     idempotence_key = str(uuid.uuid4())
+
+    if method == 'tinkoff_bank':
+        Configuration.account_id = config('YOOKASSA_ID')
+        Configuration.secret_key = config('YOOKASSA_TOKEN')
+    else:
+        Configuration.account_id = config('ALIKASSA_ID')
+        Configuration.secret_key = config('ALIKASSA_TOKEN')
+
 
     payment = Payment.create({
         "amount": {

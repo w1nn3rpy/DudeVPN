@@ -92,10 +92,8 @@ async def get_or_create_subscription(
 
     user = await get_user_by_tg_id(str(telegram_id))
     if user:
-        print('user: ', user)
         user_data = user.get("response", user)
         if len(user_data) > 0:
-            print('user_data: ', user_data)
             uuid = user_data[0].get("uuid")
 
             updated = await update_user(uuid, days)

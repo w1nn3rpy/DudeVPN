@@ -513,3 +513,38 @@ async def update_invoice_db(serial_id):
     finally:
         if con:
             await con.close()
+
+async def is_first_time_sub_check_db(user_id):
+    con = None
+    try:
+        con = await asyncpg.connect(DB_URL)
+        query = '''
+        SELECT first_time_subscribe
+        FROM users
+        WHERE user_id = $1'''
+        response = await con.fetchval(query, user_id)
+        return response
+
+    except Exception as e:
+        logger.error(f'Error in {__name__}: {e}')
+
+    finally:
+        if con:
+            await con.close()
+
+async def set_first_time_sub_db(user_id):
+    con = None
+    try:
+        con = await asyncpg.connect(DB_URL)
+        query = '''
+        UPDATE users
+        SET first_time_subscribe = NOW()
+        WHERE user_id = $1'''
+        await con.execute(query, user_id)
+
+    except Exception as e:
+        logger.error(f'Error in {__name__}: {e}')
+
+    finally:
+        if con:
+            await con.close()

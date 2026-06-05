@@ -7,7 +7,7 @@ from aiogram.types import Message, LabeledPrice, CallbackQuery
 from decouple import config
 
 from database.db_users import get_user_info, set_user_sub_link, set_for_subscribe, extension_subscribe, \
-    create_invoice_db, update_invoice_db
+    create_invoice_db, update_invoice_db, is_first_time_sub_check_db, set_first_time_sub_db
 from handlers.start import delete_messages
 from keyboards.inline_kbs import main_inline_kb, subscription_button
 from lingo.template import MENU_TEXT
@@ -92,6 +92,10 @@ async def successful_payment_handler(message: Message, state: FSMContext):
                 await set_user_sub_link(user_id, sub_link, uuid)
                 await set_for_subscribe(user_id, int(duration) * 31)
 
+                is_first_time = await is_first_time_sub_check_db(user_id)
+                if is_first_time:
+                    await set_first_time_sub_db(user_id)
+
                 await message.answer_photo(photo=config('CONGRATS'),
                                                     caption='🎉 Спасибо за покупку! 🎉\n'
                                                     f'Ваша ссылка на подписку и инструкцию доступна по кнопке ниже',
@@ -106,6 +110,11 @@ async def successful_payment_handler(message: Message, state: FSMContext):
         else:
             await extension_subscribe(user_id, int(duration) * 31)
             await get_or_create_subscription(user_id, int(duration) * 31)
+
+            is_first_time = await is_first_time_sub_check_db(user_id)
+            if is_first_time:
+                await set_first_time_sub_db(user_id)
+
             await message.answer('Спасибо за продление подписки!\n'
                                       'Мы стараемся для Вас ❤️\n'
                                       '\nДля возврата в меню нажмите /start')

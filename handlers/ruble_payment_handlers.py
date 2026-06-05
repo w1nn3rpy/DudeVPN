@@ -7,7 +7,8 @@ from decouple import config
 
 from create_bot import bot, logger
 from database.db_users import get_user_info, get_user_referral_system_by_id, new_referral_balance_db, set_user_sub_link, \
-    set_for_subscribe, extension_subscribe, send_reward_to_referrer, create_invoice_db, update_invoice_db
+    set_for_subscribe, extension_subscribe, send_reward_to_referrer, create_invoice_db, update_invoice_db, \
+    set_first_time_sub_db, is_first_time_sub_check_db
 from keyboards.inline_kbs import main_inline_kb, subscription_button
 from lingo.template import MENU_TEXT
 from payment.yookassa_api import create_payment, check_status
@@ -166,6 +167,10 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
                     await set_user_sub_link(call.from_user.id, sub_link, uuid)
                     await set_for_subscribe(call.from_user.id, sub_time * 31)
 
+                    is_first_time = await is_first_time_sub_check_db(call.from_user.id)
+                    if is_first_time:
+                        await set_first_time_sub_db(call.from_user.id)
+
                     await call.message.answer_photo(photo=config('CONGRATS'),
                                                     caption='🎉 Спасибо за покупку! 🎉\n'
                                                     f'Ваша ссылка на подписку и инструкцию доступна по кнопке ниже',
@@ -179,6 +184,11 @@ async def check_ruble_pay_handler(call: CallbackQuery, state: FSMContext):
             else:
                 await extension_subscribe(call.from_user.id, sub_time * 31)
                 await get_or_create_subscription(call.from_user.id, sub_time * 31)
+
+                is_first_time = await is_first_time_sub_check_db(call.from_user.id)
+                if is_first_time:
+                    await set_first_time_sub_db(call.from_user.id)
+
                 await call.message.answer_photo(photo=config('CONGRATS'),
                                                 caption='Спасибо за продление подписки!\n'
                                               'Мы стараемся для Вас ❤️\n'

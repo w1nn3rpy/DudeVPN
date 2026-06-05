@@ -12,7 +12,8 @@ from keyboards.inline_kbs import main_inline_kb, about_kb, profile_kb, profile_s
 from keyboards.payment_keyboards import get_link_kb
 from database.db_users import get_user_info, new_user, new_user_in_referral_system, \
     update_username, get_user_referral_system_by_id, set_user_sub_link, set_for_subscribe, \
-    extension_subscribe, pop_promo, set_for_trial_subscribe, check_to_advertiser, check_got_by_adv
+    extension_subscribe, pop_promo, set_for_trial_subscribe, check_to_advertiser, check_got_by_adv, \
+    set_first_time_sub_db, is_first_time_sub_check_db
 from create_bot import logger, bot
 from lingo.template import MENU_TEXT, ABOUT_MENU, PROFILE_SUB, PROFILE_NON_SUB, PROMO, REFERRAL_SYSTEM
 from states.user_states import Help, Trial, Promo
@@ -216,6 +217,11 @@ async def promo_handler(message: Message, state: FSMContext):
         if user_data['is_subscriber']:
             await extension_subscribe(message.from_user.id, duration)
             await get_or_create_subscription(message.from_user.id, duration)
+
+            is_first_time = await is_first_time_sub_check_db(message.from_user.id)
+            if is_first_time:
+                await set_first_time_sub_db(message.from_user.id)
+
             await message.answer_photo(photo=config('CONGRATS'),
                                        caption=f'Промокод {promo_code} активирован! 🔥\n'
                                                f'Ваша подписка продлена на {duration} дней.\n'
@@ -229,6 +235,10 @@ async def promo_handler(message: Message, state: FSMContext):
                 sub_link = result['sub_url']
                 uuid = result['uuid']
                 await set_user_sub_link(message.from_user.id, sub_link, uuid)
+
+                is_first_time = await is_first_time_sub_check_db(message.from_user.id)
+                if is_first_time:
+                    await set_first_time_sub_db(message.from_user.id)
 
                 await message.answer_photo(photo=config('CONGRATS'),
                                            caption=f'Промокод {promo_code} активирован! 🔥\n'
@@ -302,13 +312,12 @@ async def get_trial_key(call: CallbackQuery, state: FSMContext):
     await delete_messages(call)
     on_time = call.data.split('_')[1]
 
-    # TODO создание юзера в панели с подпиской на "on_time" срок. Получение ссылки в переменную sub_link
     result = await get_or_create_subscription(call.from_user.id, int(on_time))
     sub_link = result['sub_url']
     uuid = result['uuid']
     await set_user_sub_link(call.from_user.id, sub_link, uuid)
     await set_for_trial_subscribe(call.from_user.id, on_time)
-
+    await set_first_time_sub_db(call.from_user.id)
     await call.message.answer(f'🎉 Ваша ссылка на подписку и инструкцию 🎉', reply_markup=subscription_button())
     await call.message.answer(f'Для перехода в главное меню нажмите /start')
     await state.clear()

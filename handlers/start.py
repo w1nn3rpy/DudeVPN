@@ -245,7 +245,7 @@ async def promo_handler(message: Message, state: FSMContext):
                                                    f'Вам предоставлен доступ на {duration} дней.\n\n'
                                                    f'Ваша ссылка на подписку и инструкцию доступна по кнопке ниже',
                                            reply_markup=subscription_button())
-                await message.ansawer(f'Для перехода в главное меню нажмите /start')
+                await message.answer(f'Для перехода в главное меню нажмите /start')
                 await state.clear()
 
             except Exception as e:
